@@ -1,3 +1,9 @@
+
+# ALUNOS:
+# -Pedro Henrique Reis Rodrigues     -> Matrícula: 668443
+# -Tárcila Fernanda Resende da Silva -> Matrícula: 680250
+
+from operator import truediv
 import os
 import tkinter
 from pandas import DataFrame
@@ -25,13 +31,12 @@ import os
 import seaborn as sns
 import pandas as pd
 from skimage.filters import sobel
-from skimage.feature import greycomatrix, greycoprops
 from skimage.measure import shannon_entropy
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
 from matplotlib import cm
 
-WIDTH, HEIGHT = 1500, 800
+WIDTH, HEIGHT = 950, 500
 
 test_images = []
 test_labels = []
@@ -39,20 +44,25 @@ train_images = []
 train_labels = []
 x_test = []
 
-# ALUNOS:
-# -Pedro Henrique Reis Rodrigues
-# -Tárcila Fernanda Resende da Silva
-# MATRÍCULA:
-# -668443
-# -680250
 
 
 # Criação da Matriz de Pixels através do TkInter
 root = Tk()
+root.title("Reconhecimento de Padrões por textura")
+root.grid_rowconfigure(0,weight=1)
+root.grid_columnconfigure(0,weight=1)
+# root.geometry("1400x600+0+0")
+
+#Definição de grid
+canvasFrame = Frame(root)
+canvasFrame.pack(side=tkinter.LEFT, fill=tkinter.X, expand=TRUE)
+
+buttonsFrame = Frame(root, border=4)
+buttonsFrame.pack(side=tkinter.RIGHT)
 
 # Cria a janela, com tamanho de 1500x800p para seleção da imagem
-canvas = Canvas(root, width=WIDTH, height=HEIGHT)
-canvas.pack()
+canvas = Canvas(canvasFrame, width=WIDTH, height=HEIGHT, border=2, bg="#C0C0C0", cursor="dot")
+canvas.pack(fill=tkinter.BOTH, expand=TRUE)
 
 
 def feature_extractor(dataset):
@@ -405,49 +415,43 @@ def dataInfo():
     energia = greycoprops(matrix_coocurrence, 'energy')[0, 0]
     entropia = shannon_entropy(image)
 
-    label = Label(root, text=f"Entropia: {entropia}\nEnergia: {energia}\nHomogeneidade: {homogeneidade}",
+    label = Label(canvas, text=f"Entropia: {entropia}\nEnergia: {energia}\nHomogeneidade: {homogeneidade}",
                   fg="black", font="Arial")
     label.pack()
     label.place(x=0, y=200)
+
+    # tkinter.messagebox.showinfo("Descritores",f"Entropia: {entropia}\n\nEnergia: {energia}\nHomogeneidade: {homogeneidade}")
+
 
 
 def uploadImage():
     global img
     global filename
     filename = os.path.abspath(tkf.askopenfilename(
-        initialdir=r'C:\Users\Fasi\Desktop\PI Trabalho', title="Select your Image"))
+        initialdir=r'C:\\', title="Select your Image"))
     img = ImageTk.PhotoImage(Image.open(os.path.join(filename)))
-    canvas.create_image(60, 60, anchor=NW, image=img)
+    canvas.create_image(120, 120, anchor=NW, image=img)
+
+## Definindo botões de ações
+
+butUpload = Button(buttonsFrame, text="Selecionar uma imagem",bg="#696969",fg="WHITE", activebackground="#4F4F4F", width=40, command=uploadImage)
+butUpload.grid(row=1, column=1, padx=20, pady=20)
+
+butGetDATA = Button(buttonsFrame, text="Descrever imagem",bg="#696969",fg="WHITE", activebackground="#4F4F4F", width=40, command=dataInfo)
+butGetDATA.grid(row=2, column=1, padx=20, pady=20)
 
 
-butUpload = Button(root, text="Upload Image", activebackground="black",
-                   command=uploadImage, width=11)
-butUpload.pack()
-butUpload.place(x=10, y=10)
+butTrain = Button(buttonsFrame, text="Treinar rede neural",bg="#696969",fg="WHITE", activebackground="#4F4F4F", width=40, command=Training)
+butTrain.grid(row=3, column=1, padx=20, pady=20)
 
-butGetDATA = Button(root, text="Get Image Data", activebackground="black",
-                    command=dataInfo, width=15)
-butGetDATA.pack()
-butGetDATA.place(x=110, y=10)
+butTest = Button(buttonsFrame, text="Testar a rede neural com uma imagem aleatória",bg="#696969",fg="WHITE", activebackground="#4F4F4F", width=40, command=RandomImageTesting)
+butTest.grid(row=4, column=1, padx=20, pady=20)
 
-butTrain = Button(root, text="Train Neural Network", activebackground="black",
-                  command=Training, width=19)
-butTrain.pack()
-butTrain.place(x=240, y=10)
+butTestImage = Button(buttonsFrame, text="Testar a rede neural com uma imagem aleatória",bg="#696969",fg="WHITE", activebackground="#4F4F4F", width=40, command=TestSelectedImage)
+butTestImage.grid(row=5, column=1, padx=20, pady=20)
 
-butTest = Button(root, text="Test Neural Network with a Random Image", activebackground="black",
-                 command=RandomImageTesting, width=35)
-butTest.pack()
-butTest.place(x=395, y=10)
+butConfusionMatrix = Button(buttonsFrame, text="Printar Matriz de Confusão",bg="#696969",fg="WHITE", activebackground="#4F4F4F", width=40, command=printMatrixConfusion)
+butConfusionMatrix.grid(row=6, column=1, padx=20, pady=10)
 
-butTestImage = Button(root, text="Test Neural Network with a Selected Image", activebackground="black",
-                      command=TestSelectedImage, width=35)
-butTestImage.pack()
-butTestImage.place(x=665, y=10)
-
-butConfusionMatrix = Button(root, text="Print Confusion Matrix", activebackground="black",
-                            command=printMatrixConfusion, width=20)
-butConfusionMatrix.pack()
-butConfusionMatrix.place(x=935, y=10)
 
 root.mainloop()
