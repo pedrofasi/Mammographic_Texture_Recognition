@@ -5,6 +5,7 @@
 
 from operator import truediv
 import os
+from struct import pack
 import tkinter
 from pandas import DataFrame
 import tkinter.filedialog as tkf
@@ -20,18 +21,12 @@ from sklearn import preprocessing
 import pandas as pd
 import random
 from sklearn.metrics import confusion_matrix
-from sklearn import metrics
 import lightgbm as lgb
-from sklearn import preprocessing
 import numpy as np
 import matplotlib.pyplot as plt
-import glob
-import cv2
 import os
 import seaborn as sns
-import pandas as pd
 from skimage.filters import sobel
-from skimage.measure import shannon_entropy
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
 from matplotlib import cm
@@ -64,8 +59,25 @@ buttonsFrame.pack(side=tkinter.RIGHT)
 canvas = Canvas(canvasFrame, width=WIDTH, height=HEIGHT, border=2, bg="#C0C0C0", cursor="dot")
 canvas.pack(fill=tkinter.BOTH, expand=TRUE)
 
+def BresenhamCircumference(xC, yC, r):
+    x = 0
+    y = r
+    p = 3 + 2*r
 
-def feature_extractor(dataset):
+    while( x < y) :
+        if( p < 0):
+            p += 4 * x + 6
+        else:
+            p += 4*(x-y) + 10
+            y -= 1
+        x += 1
+        
+    
+
+
+
+
+def FeatureExtractor(dataset):
     image_dataset = pd.DataFrame()
     for image in range(dataset.shape[0]):  # iterate through each file
         # print(image)
@@ -164,13 +176,15 @@ def Training():
     global y_train
     global x_test
     global y_test
-    # for directory_path in glob.glob("cell_images/train/*"):
+
+
+    # for directory_path in glob.glob("Treino/*"):
     for directory_path in glob.glob("Treino/*"):
         label = directory_path.split("\\")[-1]
         print(label)
         for img_path in glob.glob(os.path.join(directory_path, "*.png")):
             print(img_path)
-            img = cv2.imread(img_path, 0)  # Reading color images
+            img = cv2.imread(img_path, 0)  # Lendo a imagem na escala de tons de cinza
             img = cv2.resize(img, (SIZE, SIZE))  # Resize images
             train_images.append(img)
             train_labels.append(label)
@@ -217,7 +231,7 @@ def Training():
 
     ####################################################################
     # Extract features from training images
-    image_features = feature_extractor(x_train)
+    image_features = FeatureExtractor(x_train)
     X_for_ML = image_features
     # Reshape to a vector for Random Forest / SVM training
     #n_features = image_features.shape[1]
@@ -252,7 +266,7 @@ def Training():
 
     # Predict on Test data
     # Extract features from test data and reshape, just like training data
-    test_features = feature_extractor(x_test)
+    test_features = FeatureExtractor(x_test)
     test_features = np.expand_dims(test_features, axis=0)
     test_for_RF = np.reshape(test_features, (x_test.shape[0], -1))
 
@@ -262,6 +276,17 @@ def Training():
     # Inverse le transform to get original label back.
     test_prediction = le.inverse_transform(test_prediction)
 
+    #Pop-up para mostrar  que o treino finalizou
+    popSuccess = Toplevel(root)
+    popSuccess.title("Treino da Rede Neural")
+    popSuccess.geometry("300x100")
+    popSuccess.config(bg="#C0C0C0")
+
+    popSuccess_label =  Label(popSuccess, text=f"O treino finalizou. ",
+                  fg="black", font="Arial")
+    popSuccess_label.pack(pady=10)
+
+
 
 def RandomImageTesting():
     # Check results on a few random images
@@ -270,24 +295,36 @@ def RandomImageTesting():
     n = random.randint(0, x_test.shape[0]-1)
     imgtest = x_test[n]
 
+    print("\n\n imagem teste \n", imgtest)
+
     image = cv2.cvtColor(imgtest, cv2.COLOR_BGR2RGB)
     image = ImageTk.PhotoImage(image=Image.fromarray(image))
     auximg2 = image
-    canvas.create_image(600, 60, anchor=NW, image=auximg2)
+    canvas.delete('all')
+    labelImgTitle = Label(root, text=f"Imagem utilizada no teste:",
+                   fg="black", font="Arial")
+    labelImgTitle.pack()
+    labelImgTitle.place(x=50, y=35)
+    canvas.create_image(50, 60, anchor=NW, image=auximg2)
 
     figure = Figure(figsize=(4, 4))
     ax = figure.add_subplot()
     ax.imshow(imgtest)
 
-    canvas2 = FigureCanvasTkAgg(figure, master=root)
+    #Pop-up para mostrar a imagem processada
+    pop = Toplevel(root)
+    pop.title("Imagem Analisada e Processada")
+    pop.geometry("500x500")
+    pop.config(bg="#C0C0C0")
+
+    canvas2 = FigureCanvasTkAgg(figure, master=pop)
     canvas2.draw()
-    canvas2.get_tk_widget().pack()
-    canvas2.get_tk_widget().place(x=1000, y=100)
+    canvas2.get_tk_widget().pack(pady=10)
 
     # Extract features and reshape to right dimensions
     # Expand dims so the input is (num images, x, y, c)
     input_img = np.expand_dims(imgtest, axis=0)
-    input_img_features = feature_extractor(input_img)
+    input_img_features = FeatureExtractor(input_img)
     input_img_features = np.expand_dims(input_img_features, axis=0)
     input_img_for_RF = np.reshape(input_img_features, (input_img.shape[0], -1))
     # Predict
@@ -298,43 +335,13 @@ def RandomImageTesting():
     label2 = Label(root, text=f"A Rede Neural achou que a imagem era:{img_prediction}\nE na verdade a imagem é: {test_labels[n]}",
                    fg="black", font="Arial")
     label2.pack()
-    label2.place(x=500, y=220)
-
-    label3 = Label(root, text=f"Imagem Analisada e Processada:",
-                   fg="black", font=("Arial", 20), )
-    label3.pack()
-    label3.place(x=1020, y=50)
+    label2.place(x=50, y=250)
 
     aux = metrics.accuracy_score(test_labels, test_prediction)
     label4 = Label(root, text=f"Accuracy = {aux}",
-                   fg="black", font=("Arial", 20))
+                   fg="black", font="Arial")
     label4.pack()
-    label4.place(x=1080, y=700)
-
-
-def printMatrixConfusion():
-    cm = confusion_matrix(test_labels, test_prediction)
-
-    figure = Figure(figsize=(4, 4))
-    ax = figure.subplots()
-    sns.heatmap(cm, annot=True, linewidths=.5, ax=ax)
-
-    init_figure = figure
-    canvas = FigureCanvasTkAgg(init_figure, master=root)
-    canvas.draw()
-    canvas.get_tk_widget().pack()
-    canvas.get_tk_widget().place(x=1000, y=100)
-
-    label3 = Label(root, text=f"\tConfusion Matrix:\t",
-                   fg="black", font=("Arial", 20), )
-    label3.pack()
-    label3.place(x=1080, y=50)
-
-    aux = metrics.accuracy_score(test_labels, test_prediction)
-    label2 = Label(root, text=f"Accuracy = {aux}",
-                   fg="black", font=("Arial", 20))
-    label2.pack()
-    label2.place(x=1080, y=700)
+    label4.place(x=50, y=300)
 
 
 def TestSelectedImage():
@@ -348,15 +355,24 @@ def TestSelectedImage():
         initialdir=r'C:\\', title="Select your Image"))
     img2 = ImageTk.PhotoImage(Image.open(os.path.join(filename2)))
     auximg = img2
-    canvas.create_image(600, 60, anchor=NW, image=auximg)
 
-    if(r"Testes\1" in filename2):
+    canvas.delete('all')
+    labelImgTitle = Label(root, text=f"Imagem utilizada no teste:",
+                   fg="black", font="Arial")
+    labelImgTitle.pack()
+    labelImgTitle.place(x=50, y=35)
+    
+    canvas.create_image(50, 60, anchor=NW, image=auximg)
+
+    if(r"Testes/1" in filename2):
         n = 1
-    elif(r"Testes\2" in filename2):
+    elif(r"Testes/2" in filename2):
         n = 2
-    elif(r"Testes\3" in filename2):
+
+    elif(r"Testes/3" in filename2):
         n = 3
-    elif(r"Testes\4" in filename2):
+
+    elif(r"Testes/4" in filename2):
         n = 4
 
     img2 = cv2.imread(filename2, 0)
@@ -365,15 +381,21 @@ def TestSelectedImage():
     ax = figure.add_subplot()
     ax.imshow(imgtest)
 
-    canvas2 = FigureCanvasTkAgg(figure, master=root)
+    #Pop-up para mostrar o resultado
+    pop = Toplevel(root)
+    pop.title("Imagem Analisada e Processada")
+    pop.geometry("500x500")
+    pop.config(bg="#C0C0C0")
+
+    canvas2 = FigureCanvasTkAgg(figure, master=pop)
     canvas2.draw()
-    canvas2.get_tk_widget().pack()
-    canvas2.get_tk_widget().place(x=1000, y=100)
+    canvas2.get_tk_widget().pack(pady=10)
+
 
     # Extract features and reshape to right dimensions
     # Expand dims so the input is (num images, x, y, c)
     input_img = np.expand_dims(imgtest, axis=0)
-    input_img_features = feature_extractor(input_img)
+    input_img_features = FeatureExtractor(input_img)
     input_img_features = np.expand_dims(input_img_features, axis=0)
     input_img_for_RF = np.reshape(input_img_features, (input_img.shape[0], -1))
     # Predict
@@ -384,18 +406,45 @@ def TestSelectedImage():
     label2 = Label(root, text=f"A Rede Neural achou que a imagem era:{img_prediction}\nE na verdade a imagem é: {n}",
                    fg="black", font="Arial")
     label2.pack()
-    label2.place(x=500, y=220)
+    label2.place(x=50, y=250)
 
-    label3 = Label(root, text=f"Imagem Analisada e Processada:",
-                   fg="black", font=("Arial", 20), )
-    label3.pack()
-    label3.place(x=1020, y=50)
+    # label3 = Label(root, text=f"Imagem Analisada e Processada:",
+    #                fg="black", font=("Arial", 20), )
+    # label3.pack()
+    # label3.place(x=500, y=50)
 
     aux = metrics.accuracy_score(test_labels, test_prediction)
     label4 = Label(root, text=f"Accuracy = {aux}",
-                   fg="black", font=("Arial", 20))
+                   fg="black", font="Arial")
     label4.pack()
-    label4.place(x=1080, y=700)
+    label4.place(x=50, y=300)
+
+
+
+def printMatrixConfusion():
+    cm = confusion_matrix(test_labels, test_prediction)
+
+    figure = Figure(figsize=(4, 4))
+    ax = figure.subplots()
+    sns.heatmap(cm, annot=True, linewidths=.5, ax=ax)
+
+    #Pop-up para mostrar o resultado
+    pop = Toplevel(root)
+    pop.title("Matriz de confusão")
+    pop.geometry("500x500")
+    pop.config(bg="#C0C0C0")
+
+    init_figure = figure
+    canvas2 = FigureCanvasTkAgg(init_figure, master=pop)
+    canvas2.draw()
+    canvas2.get_tk_widget().pack(pady=10)
+    # canvas2.get_tk_widget().place(x=50, y=80)
+
+    aux = metrics.accuracy_score(test_labels, test_prediction)
+    label2 = Label(pop, text=f"Accuracy = {aux}",
+                   fg="black", font="Arial")
+    label2.pack()
+    label2.place(x=220, y=420)
 
 
 def dataInfo():
@@ -406,22 +455,24 @@ def dataInfo():
 
     # printando a matriz de coocorrencia
     # for i in range(0, len(matrix_coocurrence), 1):
-    # for j in range(0, len(matrix_coocurrence[i]), 1):
-    # if(matrix_coocurrence[i][j].any() != 0):
-    # print(matrix_coocurrence[i][j][0])
+    #     for j in range(0, len(matrix_coocurrence[i]), 1):
+    #         if(matrix_coocurrence[i][j].any() != 0):
+    #             print(matrix_coocurrence[i][j][0])
 
     # GLCM propriedades
     homogeneidade = greycoprops(matrix_coocurrence, 'homogeneity')[0, 0]
     energia = greycoprops(matrix_coocurrence, 'energy')[0, 0]
     entropia = shannon_entropy(image)
 
-    label = Label(canvas, text=f"Entropia: {entropia}\nEnergia: {energia}\nHomogeneidade: {homogeneidade}",
+    #Pop-up para mostrar o resultado
+    pop = Toplevel(root)
+    pop.title("Descritores de Haralick da imagem")
+    pop.geometry("400x100")
+    pop.config(bg="#C0C0C0")
+
+    pop_label =  Label(pop, text=f"Entropia: {entropia}\nEnergia: {energia}\nHomogeneidade: {homogeneidade}",
                   fg="black", font="Arial")
-    label.pack()
-    label.place(x=0, y=200)
-
-    # tkinter.messagebox.showinfo("Descritores",f"Entropia: {entropia}\n\nEnergia: {energia}\nHomogeneidade: {homogeneidade}")
-
+    pop_label.pack(pady=10)
 
 
 def uploadImage():
@@ -430,9 +481,10 @@ def uploadImage():
     filename = os.path.abspath(tkf.askopenfilename(
         initialdir=r'C:\\', title="Select your Image"))
     img = ImageTk.PhotoImage(Image.open(os.path.join(filename)))
+    canvas.delete("all")
     canvas.create_image(120, 120, anchor=NW, image=img)
 
-## Definindo botões de ações
+## Definindo botões de ações -----------------------------------------------------------------------------------------------
 
 butUpload = Button(buttonsFrame, text="Selecionar uma imagem",bg="#696969",fg="WHITE", activebackground="#4F4F4F", width=40, command=uploadImage)
 butUpload.grid(row=1, column=1, padx=20, pady=20)
@@ -447,7 +499,7 @@ butTrain.grid(row=3, column=1, padx=20, pady=20)
 butTest = Button(buttonsFrame, text="Testar a rede neural com uma imagem aleatória",bg="#696969",fg="WHITE", activebackground="#4F4F4F", width=40, command=RandomImageTesting)
 butTest.grid(row=4, column=1, padx=20, pady=20)
 
-butTestImage = Button(buttonsFrame, text="Testar a rede neural com uma imagem aleatória",bg="#696969",fg="WHITE", activebackground="#4F4F4F", width=40, command=TestSelectedImage)
+butTestImage = Button(buttonsFrame, text="Testar a rede neural com uma imagem selecionada",bg="#696969",fg="WHITE", activebackground="#4F4F4F", width=40, command=TestSelectedImage)
 butTestImage.grid(row=5, column=1, padx=20, pady=20)
 
 butConfusionMatrix = Button(buttonsFrame, text="Printar Matriz de Confusão",bg="#696969",fg="WHITE", activebackground="#4F4F4F", width=40, command=printMatrixConfusion)
