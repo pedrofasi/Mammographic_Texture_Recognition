@@ -3,9 +3,11 @@
 # -Pedro Henrique Reis Rodrigues     -> Matrícula: 668443
 # -Tárcila Fernanda Resende da Silva -> Matrícula: 680250
 
+import math
 from operator import truediv
 import os
 import tkinter
+from cv2 import log
 from pandas import DataFrame
 import tkinter.filedialog as tkf
 from tkinter import *
@@ -45,15 +47,14 @@ train_labels = []
 x_test = []
 
 
-
 # Criação da Matriz de Pixels através do TkInter
 root = Tk()
 root.title("Reconhecimento de Padrões por textura")
-root.grid_rowconfigure(0,weight=1)
-root.grid_columnconfigure(0,weight=1)
+root.grid_rowconfigure(0, weight=1)
+root.grid_columnconfigure(0, weight=1)
 # root.geometry("1400x600+0+0")
 
-#Definição de grid
+# Definição de grid
 canvasFrame = Frame(root)
 canvasFrame.pack(side=tkinter.LEFT, fill=tkinter.X, expand=TRUE)
 
@@ -61,8 +62,18 @@ buttonsFrame = Frame(root, border=4)
 buttonsFrame.pack(side=tkinter.RIGHT)
 
 # Cria a janela, com tamanho de 1500x800p para seleção da imagem
-canvas = Canvas(canvasFrame, width=WIDTH, height=HEIGHT, border=2, bg="#C0C0C0", cursor="dot")
+canvas = Canvas(canvasFrame, width=WIDTH, height=HEIGHT,
+                border=2, bg="#C0C0C0", cursor="dot")
 canvas.pack(fill=tkinter.BOTH, expand=TRUE)
+
+
+def entropy(GLCM):
+    entropia = 0
+    for i in range(GLCM):
+        for j in range(GLCM[i]):
+            entropia += GLCM[i][j] * math.log(GLCM[i][j], 2)
+
+    return entropia
 
 
 def feature_extractor(dataset):
@@ -80,65 +91,56 @@ def feature_extractor(dataset):
 
         # Full image
         #GLCM = greycomatrix(img, [1], [0, np.pi/4, np.pi/2, 3*np.pi/4])
-        GLCM = greycomatrix(img, [1], [0])
-        GLCM_Energy = greycoprops(GLCM, 'energy')[0]
-        df['Energy'] = GLCM_Energy
-        GLCM_corr = greycoprops(GLCM, 'correlation')[0]
-        df['Corr'] = GLCM_corr
-        GLCM_diss = greycoprops(GLCM, 'dissimilarity')[0]
-        df['Diss_sim'] = GLCM_diss
-        GLCM_hom = greycoprops(GLCM, 'homogeneity')[0]
-        df['Homogen'] = GLCM_hom
-        GLCM_contr = greycoprops(GLCM, 'contrast')[0]
-        df['Contrast'] = GLCM_contr
+        GLCM1, GLCM2, GLCM4, GLCM8, GLCM16 = 0
+        for i in range(0, 8, 1):
+            GLCM1 += greycomatrix(img, [1], [i*(360/8)])
 
-        GLCM2 = greycomatrix(img, [3], [0])
+        for i in range(0, 16, 1):
+            GLCM2 += greycomatrix(img, [1], [i*(360/16)])
+
+        for i in range(0, 24, 1):
+            GLCM4 += greycomatrix(img, [1], [i*(360/24)])
+
+        for i in range(0, 48, 1):
+            GLCM8 += greycomatrix(img, [1], [i*(360/48)])
+
+        for i in range(0, 96, 1):
+            GLCM16 += greycomatrix(img, [1], [i*(360/96)])
+
+        GLCM_Energy1 = greycoprops(GLCM1, 'energy')[0]
+        df['Energy1'] = GLCM_Energy1
+        GLCM_hom1 = greycoprops(GLCM1, 'homogeneity')[0]
+        df['Homogen1'] = GLCM_hom1
+        GLCM_entropy1 = entropy(GLCM1)
+        df['Entropy1'] = GLCM_entropy1
+
         GLCM_Energy2 = greycoprops(GLCM2, 'energy')[0]
         df['Energy2'] = GLCM_Energy2
-        GLCM_corr2 = greycoprops(GLCM2, 'correlation')[0]
-        df['Corr2'] = GLCM_corr2
-        GLCM_diss2 = greycoprops(GLCM2, 'dissimilarity')[0]
-        df['Diss_sim2'] = GLCM_diss2
         GLCM_hom2 = greycoprops(GLCM2, 'homogeneity')[0]
         df['Homogen2'] = GLCM_hom2
-        GLCM_contr2 = greycoprops(GLCM2, 'contrast')[0]
-        df['Contrast2'] = GLCM_contr2
+        GLCM_entropy2 = entropy(GLCM2)
+        df['Entropy2'] = GLCM_entropy2
 
-        GLCM3 = greycomatrix(img, [5], [0])
-        GLCM_Energy3 = greycoprops(GLCM3, 'energy')[0]
-        df['Energy3'] = GLCM_Energy3
-        GLCM_corr3 = greycoprops(GLCM3, 'correlation')[0]
-        df['Corr3'] = GLCM_corr3
-        GLCM_diss3 = greycoprops(GLCM3, 'dissimilarity')[0]
-        df['Diss_sim3'] = GLCM_diss3
-        GLCM_hom3 = greycoprops(GLCM3, 'homogeneity')[0]
-        df['Homogen3'] = GLCM_hom3
-        GLCM_contr3 = greycoprops(GLCM3, 'contrast')[0]
-        df['Contrast3'] = GLCM_contr3
-
-        GLCM4 = greycomatrix(img, [0], [np.pi/4])
         GLCM_Energy4 = greycoprops(GLCM4, 'energy')[0]
         df['Energy4'] = GLCM_Energy4
-        GLCM_corr4 = greycoprops(GLCM4, 'correlation')[0]
-        df['Corr4'] = GLCM_corr4
-        GLCM_diss4 = greycoprops(GLCM4, 'dissimilarity')[0]
-        df['Diss_sim4'] = GLCM_diss4
         GLCM_hom4 = greycoprops(GLCM4, 'homogeneity')[0]
         df['Homogen4'] = GLCM_hom4
-        GLCM_contr4 = greycoprops(GLCM4, 'contrast')[0]
-        df['Contrast4'] = GLCM_contr4
+        GLCM_entropy4 = entropy(GLCM4)
+        df['Entropy4'] = GLCM_entropy4
 
-        GLCM5 = greycomatrix(img, [0], [np.pi/2])
-        GLCM_Energy5 = greycoprops(GLCM5, 'energy')[0]
-        df['Energy5'] = GLCM_Energy5
-        GLCM_corr5 = greycoprops(GLCM5, 'correlation')[0]
-        df['Corr5'] = GLCM_corr5
-        GLCM_diss5 = greycoprops(GLCM5, 'dissimilarity')[0]
-        df['Diss_sim5'] = GLCM_diss5
-        GLCM_hom5 = greycoprops(GLCM5, 'homogeneity')[0]
-        df['Homogen5'] = GLCM_hom5
-        GLCM_contr5 = greycoprops(GLCM5, 'contrast')[0]
-        df['Contrast5'] = GLCM_contr5
+        GLCM_Energy8 = greycoprops(GLCM8, 'energy')[0]
+        df['Energy8'] = GLCM_Energy8
+        GLCM_hom8 = greycoprops(GLCM8, 'homogeneity')[0]
+        df['Homogen8'] = GLCM_hom8
+        GLCM_entropy1 = entropy(GLCM1)
+        df['Entropy1'] = GLCM_entropy1
+
+        GLCM_Energy16 = greycoprops(GLCM16, 'energy')[0]
+        df['Energy16'] = GLCM_Energy16
+        GLCM_hom16 = greycoprops(GLCM16, 'homogeneity')[0]
+        df['Homogen16'] = GLCM_hom16
+        GLCM_entropy1 = entropy(GLCM1)
+        df['Entropy1'] = GLCM_entropy1
 
         # Add more filters as needed
         #entropy = shannon_entropy(img)
@@ -401,6 +403,7 @@ def TestSelectedImage():
 def dataInfo():
     global label
     image = io.imread(filename)
+
     matrix_coocurrence = greycomatrix(
         image, [1], [0, np.pi/4, np.pi/2, 3*np.pi/4])
 
@@ -416,12 +419,11 @@ def dataInfo():
     entropia = shannon_entropy(image)
 
     label = Label(canvas, text=f"Entropia: {entropia}\nEnergia: {energia}\nHomogeneidade: {homogeneidade}",
-                  fg="black", font="Arial")
+                  fg="black", font="Arial", bg="grey")
     label.pack()
-    label.place(x=0, y=200)
+    label.place(x=10, y=300)
 
     # tkinter.messagebox.showinfo("Descritores",f"Entropia: {entropia}\n\nEnergia: {energia}\nHomogeneidade: {homogeneidade}")
-
 
 
 def uploadImage():
@@ -432,25 +434,32 @@ def uploadImage():
     img = ImageTk.PhotoImage(Image.open(os.path.join(filename)))
     canvas.create_image(120, 120, anchor=NW, image=img)
 
-## Definindo botões de ações
+# Definindo botões de ações
 
-butUpload = Button(buttonsFrame, text="Selecionar uma imagem",bg="#696969",fg="WHITE", activebackground="#4F4F4F", width=40, command=uploadImage)
+
+butUpload = Button(buttonsFrame, text="Selecionar uma imagem", bg="#696969",
+                   fg="WHITE", activebackground="#4F4F4F", width=40, command=uploadImage)
 butUpload.grid(row=1, column=1, padx=20, pady=20)
 
-butGetDATA = Button(buttonsFrame, text="Descrever imagem",bg="#696969",fg="WHITE", activebackground="#4F4F4F", width=40, command=dataInfo)
+butGetDATA = Button(buttonsFrame, text="Descrever imagem", bg="#696969",
+                    fg="WHITE", activebackground="#4F4F4F", width=40, command=dataInfo)
 butGetDATA.grid(row=2, column=1, padx=20, pady=20)
 
 
-butTrain = Button(buttonsFrame, text="Treinar rede neural",bg="#696969",fg="WHITE", activebackground="#4F4F4F", width=40, command=Training)
+butTrain = Button(buttonsFrame, text="Treinar rede neural", bg="#696969",
+                  fg="WHITE", activebackground="#4F4F4F", width=40, command=Training)
 butTrain.grid(row=3, column=1, padx=20, pady=20)
 
-butTest = Button(buttonsFrame, text="Testar a rede neural com uma imagem aleatória",bg="#696969",fg="WHITE", activebackground="#4F4F4F", width=40, command=RandomImageTesting)
+butTest = Button(buttonsFrame, text="Testar a rede neural com uma imagem aleatória",
+                 bg="#696969", fg="WHITE", activebackground="#4F4F4F", width=40, command=RandomImageTesting)
 butTest.grid(row=4, column=1, padx=20, pady=20)
 
-butTestImage = Button(buttonsFrame, text="Testar a rede neural com uma imagem aleatória",bg="#696969",fg="WHITE", activebackground="#4F4F4F", width=40, command=TestSelectedImage)
+butTestImage = Button(buttonsFrame, text="Testar a rede neural com uma imagem aleatória",
+                      bg="#696969", fg="WHITE", activebackground="#4F4F4F", width=40, command=TestSelectedImage)
 butTestImage.grid(row=5, column=1, padx=20, pady=20)
 
-butConfusionMatrix = Button(buttonsFrame, text="Printar Matriz de Confusão",bg="#696969",fg="WHITE", activebackground="#4F4F4F", width=40, command=printMatrixConfusion)
+butConfusionMatrix = Button(buttonsFrame, text="Printar Matriz de Confusão", bg="#696969",
+                            fg="WHITE", activebackground="#4F4F4F", width=40, command=printMatrixConfusion)
 butConfusionMatrix.grid(row=6, column=1, padx=20, pady=10)
 
 
