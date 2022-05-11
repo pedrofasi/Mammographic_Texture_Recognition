@@ -9,7 +9,7 @@ from operator import truediv
 import os
 from struct import pack
 import tkinter
-from cv2 import log
+from cv2 import imread, log
 from pandas import DataFrame
 import tkinter.filedialog as tkf
 from tkinter import *
@@ -130,35 +130,35 @@ def FeatureExtractor(dataset):
         df['Energy1'] = GLCM_Energy1
         GLCM_hom1 = greycoprops(GLCM1, 'homogeneity')[0]
         df['Homogen1'] = GLCM_hom1
-        GLCM_entropy1 = shannon_entropy(img)
+        GLCM_entropy1 = shannon_entropy(GLCM1)
         df['Entropy1'] = GLCM_entropy1
 
         GLCM_Energy2 = greycoprops(GLCM2, 'energy')[0]
         df['Energy2'] = GLCM_Energy2
         GLCM_hom2 = greycoprops(GLCM2, 'homogeneity')[0]
         df['Homogen2'] = GLCM_hom2
-        GLCM_entropy2 = shannon_entropy(img)
+        GLCM_entropy2 = shannon_entropy(GLCM2)
         df['Entropy2'] = GLCM_entropy2
 
         GLCM_Energy4 = greycoprops(GLCM4, 'energy')[0]
         df['Energy4'] = GLCM_Energy4
         GLCM_hom4 = greycoprops(GLCM4, 'homogeneity')[0]
         df['Homogen4'] = GLCM_hom4
-        GLCM_entropy4 = shannon_entropy(img)
+        GLCM_entropy4 = shannon_entropy(GLCM4)
         df['Entropy4'] = GLCM_entropy4
 
         GLCM_Energy8 = greycoprops(GLCM8, 'energy')[0]
         df['Energy8'] = GLCM_Energy8
         GLCM_hom8 = greycoprops(GLCM8, 'homogeneity')[0]
         df['Homogen8'] = GLCM_hom8
-        GLCM_entropy8 = shannon_entropy(img)
+        GLCM_entropy8 = shannon_entropy(GLCM8)
         df['Entropy8'] = GLCM_entropy8
 
         GLCM_Energy16 = greycoprops(GLCM16, 'energy')[0]
         df['Energy16'] = GLCM_Energy16
         GLCM_hom16 = greycoprops(GLCM16, 'homogeneity')[0]
         df['Homogen16'] = GLCM_hom16
-        GLCM_entropy16 = shannon_entropy(img)
+        GLCM_entropy16 = shannon_entropy(GLCM16)
         df['Entropy16'] = GLCM_entropy16
 
         # Add more filters as needed
@@ -196,10 +196,11 @@ def Training():
 
             img = cv2.imread(img_path, 0)
             img = cv2.resize(img, (SIZE, SIZE))  # Resize images
+            tomMax = img.max()
             img32 = [[0 for x in range(128)] for y in range(128)]
             for i in range(0, 128, 1):
                 for j in range(0, 128, 1):
-                    img32[i][j] = np.uint8(round((img[i][j]/255) * 31))
+                    img32[i][j] = np.uint8(round((img[i][j]/tomMax) * 31))
             train_images.append(img32)
             train_labels.append(label)
 
@@ -215,10 +216,11 @@ def Training():
         for img_path in glob.glob(os.path.join(directory_path, "*.png")):
             img = cv2.imread(img_path, 0)
             img = cv2.resize(img, (SIZE, SIZE))
+            tomMax = img.max()
             img32 = [[0 for x in range(128)] for y in range(128)]
             for i in range(0, 128, 1):
                 for j in range(0, 128, 1):
-                    img32[i][j] = np.uint8(round((img[i][j]/255) * 31))
+                    img32[i][j] = np.uint8(round((img[i][j]/tomMax) * 31))
             test_images.append(img32)
             test_labels.append(fruit_label)
 
@@ -312,8 +314,8 @@ def RandomImageTesting():
     n = random.randint(0, x_test.shape[0]-1)
     imgtest = x_test[n]
 
-    image = cv2.cvtColor(imgtest, cv2.COLOR_BGR2RGB)
-    image = ImageTk.PhotoImage(image=Image.fromarray(image))
+    #image = cv2.cvtColor(imgtest, cmap="gray")
+    image = ImageTk.PhotoImage(image=Image.fromarray(imgtest))
     auximg2 = image
     canvas.delete('all')
     labelImgTitle = Label(root, text=f"Imagem utilizada no teste:",
@@ -324,7 +326,7 @@ def RandomImageTesting():
 
     figure = Figure(figsize=(4, 4))
     ax = figure.add_subplot()
-    ax.imshow(imgtest)
+    ax.imshow(imgtest, cmap='gray')
 
     # Pop-up para mostrar a imagem processada
     pop = Toplevel(root)
@@ -377,8 +379,8 @@ def TestSelectedImage():
 
     canvas.delete('all')
     img32 = np.array(img32)
-    image = cv2.cvtColor(img32, cv2.COLOR_BGR2RGB)
-    image = ImageTk.PhotoImage(image=Image.fromarray(image))
+    #image = cv2.cvtColor(img32, cv2.COLOR_BGR2RGB)
+    image = ImageTk.PhotoImage(image=Image.fromarray(img32))
     auximg2 = image
     labelImgTitle = Label(root, text=f"Imagem utilizada no teste:",
                           fg="black", font="Arial")
@@ -409,7 +411,7 @@ def TestSelectedImage():
     imgtest = img32
     figure = Figure(figsize=(4, 4))
     ax = figure.add_subplot()
-    ax.imshow(imgtest)
+    ax.imshow(imgtest, cmap='gray')
 
     # Pop-up para mostrar o resultado
     pop = Toplevel(root)
@@ -475,13 +477,109 @@ def printMatrixConfusion():
     label2.place(x=220, y=420)
 
 
+def reamostragem32():
+    img_reamostrada = io.imread(filename)
+    tomMax = img_reamostrada.max()
+    for i in range(0, len(img_reamostrada), 1):
+        for j in range(0, len(img_reamostrada[i]), 1):
+            img_reamostrada[i][j] = (img_reamostrada[i][j]/tomMax)*31
+    figure = Figure(figsize=(4, 4))
+    ax = figure.add_subplot()
+    ax.imshow(img_reamostrada, cmap="gray")
+    pop = Toplevel(root)
+    pop.title("Imagem Reamostrada com 32 tons de Cinza")
+    pop.geometry("500x500")
+    pop.config(bg="#C0C0C0")
+
+    canvas2 = FigureCanvasTkAgg(figure, master=pop)
+    canvas2.draw()
+    canvas2.get_tk_widget().pack(pady=10)
+
+
+def reamostragem16():
+    img_reamostrada = io.imread(filename)
+    tomMax = img_reamostrada.max()
+    for i in range(0, len(img_reamostrada), 1):
+        for j in range(0, len(img_reamostrada[i]), 1):
+            img_reamostrada[i][j] = (img_reamostrada[i][j]/tomMax)*15
+    figure = Figure(figsize=(4, 4))
+    ax = figure.add_subplot()
+    ax.imshow(img_reamostrada, cmap="gray")
+    pop = Toplevel(root)
+    pop.title("Imagem Reamostrada com 16 tons de Cinza")
+    pop.geometry("500x500")
+    pop.config(bg="#C0C0C0")
+
+    canvas2 = FigureCanvasTkAgg(figure, master=pop)
+    canvas2.draw()
+    canvas2.get_tk_widget().pack(pady=10)
+
+
+def reamostragem8():
+    img_reamostrada = io.imread(filename)
+    tomMax = img_reamostrada.max()
+    for i in range(0, len(img_reamostrada), 1):
+        for j in range(0, len(img_reamostrada[i]), 1):
+            img_reamostrada[i][j] = (img_reamostrada[i][j]/tomMax)*7
+    figure = Figure(figsize=(4, 4))
+    ax = figure.add_subplot()
+    ax.imshow(img_reamostrada, cmap="gray")
+    pop = Toplevel(root)
+    pop.title("Imagem Reamostrada com 8 tons de Cinza")
+    pop.geometry("500x500")
+    pop.config(bg="#C0C0C0")
+
+    canvas2 = FigureCanvasTkAgg(figure, master=pop)
+    canvas2.draw()
+    canvas2.get_tk_widget().pack(pady=10)
+
+
+def reamostragem4():
+    img_reamostrada = io.imread(filename)
+    tomMax = img_reamostrada.max()
+    for i in range(0, len(img_reamostrada), 1):
+        for j in range(0, len(img_reamostrada[i]), 1):
+            img_reamostrada[i][j] = (img_reamostrada[i][j]/tomMax)*3
+    figure = Figure(figsize=(4, 4))
+    ax = figure.add_subplot()
+    ax.imshow(img_reamostrada, cmap="gray")
+    pop = Toplevel(root)
+    pop.title("Imagem Reamostrada com 4 tons de Cinza")
+    pop.geometry("500x500")
+    pop.config(bg="#C0C0C0")
+
+    canvas2 = FigureCanvasTkAgg(figure, master=pop)
+    canvas2.draw()
+    canvas2.get_tk_widget().pack(pady=10)
+
+
+def reamostragem2():
+    img_reamostrada = io.imread(filename)
+    tomMax = img_reamostrada.max()
+    for i in range(0, len(img_reamostrada), 1):
+        for j in range(0, len(img_reamostrada[i]), 1):
+            img_reamostrada[i][j] = (img_reamostrada[i][j]/tomMax)*1
+    figure = Figure(figsize=(4, 4))
+    ax = figure.add_subplot()
+    ax.imshow(img_reamostrada, cmap="gray")
+    pop = Toplevel(root)
+    pop.title("Imagem Reamostrada com 2 tons de Cinza")
+    pop.geometry("500x500")
+    pop.config(bg="#C0C0C0")
+
+    canvas2 = FigureCanvasTkAgg(figure, master=pop)
+    canvas2.draw()
+    canvas2.get_tk_widget().pack(pady=10)
+
+
 def dataInfo():
     global label
     image = io.imread(filename)
     img32 = [[0 for x in range(128)] for y in range(128)]
+    tomMax = image.max()
     for i in range(0, 128, 1):
         for j in range(0, 128, 1):
-            img32[i][j] = np.uint8(round((image[i][j]/255) * 31))
+            img32[i][j] = np.uint8(round((image[i][j]/tomMax) * 31))
     # Gerando matriz de co-ocorrencia de 4 dimensões, no qual são 2 são para 1 distancia e 4 angulos
     matrix_coocurrence = greycomatrix(
         img32, [1], [0, np.pi/4, np.pi/2, 3*np.pi/4], levels=32)
@@ -509,7 +607,7 @@ def dataInfo():
     # GLCM propriedades
     homogeneidade = greycoprops(matrix, 'homogeneity')[0, 0]
     energia = greycoprops(matrix, 'energy')[0, 0]
-    entropia = shannon_entropy(image)
+    entropia = shannon_entropy(matrix)
     entropia_namao = 0
     for i in range(0, len(matrix), 1):
         for j in range(0, len(matrix[i]), 1):
@@ -565,5 +663,24 @@ butConfusionMatrix = Button(buttonsFrame, text="Printar Matriz de Confusão", bg
                             fg="WHITE", activebackground="#4F4F4F", width=40, command=printMatrixConfusion)
 butConfusionMatrix.grid(row=6, column=1, padx=20, pady=10)
 
+but32Gray = Button(buttonsFrame, text="32 tons de cinza", bg="#696969",
+                   fg="WHITE", activebackground="#4F4F4F", width=15, command=reamostragem32)
+but32Gray.grid(row=1, column=2, padx=20, pady=10)
+
+but16Gray = Button(buttonsFrame, text="16 tons de cinza", bg="#696969",
+                   fg="WHITE", activebackground="#4F4F4F", width=15, command=reamostragem16)
+but16Gray.grid(row=1, column=3, padx=20, pady=10)
+
+but8Gray = Button(buttonsFrame, text="8 tons de cinza", bg="#696969",
+                  fg="WHITE", activebackground="#4F4F4F", width=15, command=reamostragem8)
+but8Gray.grid(row=2, column=2, padx=20, pady=10)
+
+but4Gray = Button(buttonsFrame, text="4 tons de cinza", bg="#696969",
+                  fg="WHITE", activebackground="#4F4F4F", width=15, command=reamostragem4)
+but4Gray.grid(row=2, column=3, padx=20, pady=10)
+
+but2Gray = Button(buttonsFrame, text="2 tons de cinza", bg="#696969",
+                  fg="WHITE", activebackground="#4F4F4F", width=15, command=reamostragem2)
+but2Gray.grid(row=3, column=2, padx=20, pady=10)
 
 root.mainloop()
