@@ -3,6 +3,7 @@
 # -Pedro Henrique Reis Rodrigues     -> Matrícula: 668443
 # -Tárcila Fernanda Resende da Silva -> Matrícula: 680250
 
+from ast import Global
 import math
 from operator import truediv
 import os
@@ -41,7 +42,12 @@ test_labels = []
 train_images = []
 train_labels = []
 x_test = []
-
+GLCMaux = []
+GLCM1 = []
+GLCM2 = []
+GLCM4 = []
+GLCM8 = []
+GLCM16 = []
 
 # Criação da Matriz de Pixels através do TkInter
 root = Tk()
@@ -63,31 +69,14 @@ canvas = Canvas(canvasFrame, width=WIDTH, height=HEIGHT,
 canvas.pack(fill=tkinter.BOTH, expand=TRUE)
 
 
-def BresenhamCircumference(xC, yC, r):
-    x = 0
-    y = r
-    p = 3 + 2*r
-
-    while(x < y):
-        if(p < 0):
-            p += 4 * x + 6
-        else:
-            p += 4*(x-y) + 10
-            y -= 1
-        x += 1
-
-
-def entropy(GLCM):
-    entropia = 0
-    for i in range(GLCM):
-        for j in range(GLCM[i]):
-            entropia += GLCM[i][j] * math.log(GLCM[i][j], 2)
-
-    return entropia
-
-
 def FeatureExtractor(dataset):
     image_dataset = pd.DataFrame()
+    global GLCMaux
+    global GLCM1
+    global GLCM2
+    global GLCM4
+    global GLCM8
+    global GLCM16
     for image in range(dataset.shape[0]):  # iterate through each file
         # print(image)
 
@@ -101,56 +90,76 @@ def FeatureExtractor(dataset):
 
         # Full image
         #GLCM = greycomatrix(img, [1], [0, np.pi/4, np.pi/2, 3*np.pi/4])
-        GLCM1, GLCM2, GLCM4, GLCM8, GLCM16 = 0
+        GLCM1 = np.zeros(shape=(32, 32, 1, 1), dtype=int)
+        GLCM2 = np.zeros(shape=(32, 32, 1, 1), dtype=int)
+        GLCM4 = np.zeros(shape=(32, 32, 1, 1), dtype=int)
+        GLCM8 = np.zeros(shape=(32, 32, 1, 1), dtype=int)
+        GLCM16 = np.zeros(shape=(32, 32, 1, 1), dtype=int)
+
         for i in range(0, 8, 1):
-            GLCM1 += greycomatrix(img, [1], [i*(360/8)])
+            GLCM = greycomatrix(img, [1], [i*math.radians(360/8)], levels=32)
+            for j in range(0, len(GLCM), 1):
+                for k in range(0, len(GLCM[j]), 1):
+                    GLCM1[j][k] += GLCM[j][k][0][0]
 
         for i in range(0, 16, 1):
-            GLCM2 += greycomatrix(img, [1], [i*(360/16)])
+            GLCM = greycomatrix(img, [2], [i*math.radians(360/16)], levels=32)
+            for j in range(0, len(GLCM), 1):
+                for k in range(0, len(GLCM[j]), 1):
+                    GLCM2[j][k] += GLCM[j][k][0][0]
 
         for i in range(0, 24, 1):
-            GLCM4 += greycomatrix(img, [1], [i*(360/24)])
+            GLCM = greycomatrix(img, [4], [i*math.radians(360/24)], levels=32)
+            for j in range(0, len(GLCM), 1):
+                for k in range(0, len(GLCM[j]), 1):
+                    GLCM4[j][k] += GLCM[j][k][0][0]
 
         for i in range(0, 48, 1):
-            GLCM8 += greycomatrix(img, [1], [i*(360/48)])
+            GLCM = greycomatrix(img, [8], [i*math.radians(360/48)], levels=32)
+            for j in range(0, len(GLCM), 1):
+                for k in range(0, len(GLCM[j]), 1):
+                    GLCM8[j][k] += GLCM[j][k][0][0]
 
         for i in range(0, 96, 1):
-            GLCM16 += greycomatrix(img, [1], [i*(360/96)])
+            GLCM = greycomatrix(img, [16], [i*math.radians(360/96)], levels=32)
+            for j in range(0, len(GLCM), 1):
+                for k in range(0, len(GLCM[j]), 1):
+                    GLCM16[j][k] += GLCM[j][k][0][0]
 
         GLCM_Energy1 = greycoprops(GLCM1, 'energy')[0]
         df['Energy1'] = GLCM_Energy1
         GLCM_hom1 = greycoprops(GLCM1, 'homogeneity')[0]
         df['Homogen1'] = GLCM_hom1
-        GLCM_entropy1 = entropy(GLCM1)
+        GLCM_entropy1 = shannon_entropy(img)
         df['Entropy1'] = GLCM_entropy1
 
         GLCM_Energy2 = greycoprops(GLCM2, 'energy')[0]
         df['Energy2'] = GLCM_Energy2
         GLCM_hom2 = greycoprops(GLCM2, 'homogeneity')[0]
         df['Homogen2'] = GLCM_hom2
-        GLCM_entropy2 = entropy(GLCM2)
+        GLCM_entropy2 = shannon_entropy(img)
         df['Entropy2'] = GLCM_entropy2
 
         GLCM_Energy4 = greycoprops(GLCM4, 'energy')[0]
         df['Energy4'] = GLCM_Energy4
         GLCM_hom4 = greycoprops(GLCM4, 'homogeneity')[0]
         df['Homogen4'] = GLCM_hom4
-        GLCM_entropy4 = entropy(GLCM4)
+        GLCM_entropy4 = shannon_entropy(img)
         df['Entropy4'] = GLCM_entropy4
 
         GLCM_Energy8 = greycoprops(GLCM8, 'energy')[0]
         df['Energy8'] = GLCM_Energy8
         GLCM_hom8 = greycoprops(GLCM8, 'homogeneity')[0]
         df['Homogen8'] = GLCM_hom8
-        GLCM_entropy1 = entropy(GLCM1)
-        df['Entropy1'] = GLCM_entropy1
+        GLCM_entropy8 = shannon_entropy(img)
+        df['Entropy8'] = GLCM_entropy8
 
         GLCM_Energy16 = greycoprops(GLCM16, 'energy')[0]
         df['Energy16'] = GLCM_Energy16
         GLCM_hom16 = greycoprops(GLCM16, 'homogeneity')[0]
         df['Homogen16'] = GLCM_hom16
-        GLCM_entropy1 = entropy(GLCM1)
-        df['Entropy1'] = GLCM_entropy1
+        GLCM_entropy16 = shannon_entropy(img)
+        df['Entropy16'] = GLCM_entropy16
 
         # Add more filters as needed
         #entropy = shannon_entropy(img)
@@ -184,9 +193,14 @@ def Training():
         for img_path in glob.glob(os.path.join(directory_path, "*.png")):
             print(img_path)
             # Lendo a imagem na escala de tons de cinza
+
             img = cv2.imread(img_path, 0)
             img = cv2.resize(img, (SIZE, SIZE))  # Resize images
-            train_images.append(img)
+            img32 = [[0 for x in range(128)] for y in range(128)]
+            for i in range(0, 128, 1):
+                for j in range(0, 128, 1):
+                    img32[i][j] = np.uint8(round((img[i][j]/255) * 31))
+            train_images.append(img32)
             train_labels.append(label)
 
     train_images = np.array(train_images)
@@ -201,7 +215,11 @@ def Training():
         for img_path in glob.glob(os.path.join(directory_path, "*.png")):
             img = cv2.imread(img_path, 0)
             img = cv2.resize(img, (SIZE, SIZE))
-            test_images.append(img)
+            img32 = [[0 for x in range(128)] for y in range(128)]
+            for i in range(0, 128, 1):
+                for j in range(0, 128, 1):
+                    img32[i][j] = np.uint8(round((img[i][j]/255) * 31))
+            test_images.append(img32)
             test_labels.append(fruit_label)
 
     test_images = np.array(test_images)
@@ -294,8 +312,6 @@ def RandomImageTesting():
     n = random.randint(0, x_test.shape[0]-1)
     imgtest = x_test[n]
 
-    print("\n\n imagem teste \n", imgtest)
-
     image = cv2.cvtColor(imgtest, cv2.COLOR_BGR2RGB)
     image = ImageTk.PhotoImage(image=Image.fromarray(image))
     auximg2 = image
@@ -352,30 +368,45 @@ def TestSelectedImage():
     global auximg
     filename2 = os.path.abspath(tkf.askopenfilename(
         initialdir=r'C:\\', title="Select your Image"))
-    img2 = ImageTk.PhotoImage(Image.open(os.path.join(filename2)))
-    auximg = img2
+    img2 = cv2.imread(filename2, 0)
+    img2 = cv2.resize(img2, (128, 128))
+    img32 = [[0 for x in range(128)] for y in range(128)]
+    for i in range(0, 128, 1):
+        for j in range(0, 128, 1):
+            img32[i][j] = np.uint8(round((img2[i][j]/255) * 31))
 
+    canvas.delete('all')
+    img32 = np.array(img32)
+    image = cv2.cvtColor(img32, cv2.COLOR_BGR2RGB)
+    image = ImageTk.PhotoImage(image=Image.fromarray(image))
+    auximg2 = image
+    labelImgTitle = Label(root, text=f"Imagem utilizada no teste:",
+                          fg="black", font="Arial")
+    labelImgTitle.pack()
+    labelImgTitle.place(x=50, y=35)
+    canvas.create_image(50, 60, anchor=NW, image=auximg2)
+    '''
     canvas.delete('all')
     labelImgTitle = Label(root, text=f"Imagem utilizada no teste:",
                           fg="black", font="Arial")
     labelImgTitle.pack()
     labelImgTitle.place(x=50, y=35)
-
+    
     canvas.create_image(50, 60, anchor=NW, image=auximg)
+    '''
 
-    if(r"Testes/1" in filename2):
+    if(r"Testes\1" in filename2):
         n = 1
-    elif(r"Testes/2" in filename2):
+    elif(r"Testes\2" in filename2):
         n = 2
 
-    elif(r"Testes/3" in filename2):
+    elif(r"Testes\3" in filename2):
         n = 3
 
-    elif(r"Testes/4" in filename2):
+    elif(r"Testes\4" in filename2):
         n = 4
 
-    img2 = cv2.imread(filename2, 0)
-    imgtest = img2
+    imgtest = img32
     figure = Figure(figsize=(4, 4))
     ax = figure.add_subplot()
     ax.imshow(imgtest)
@@ -447,24 +478,48 @@ def printMatrixConfusion():
 def dataInfo():
     global label
     image = io.imread(filename)
-
+    img32 = [[0 for x in range(128)] for y in range(128)]
+    for i in range(0, 128, 1):
+        for j in range(0, 128, 1):
+            img32[i][j] = np.uint8(round((image[i][j]/255) * 31))
+    # Gerando matriz de co-ocorrencia de 4 dimensões, no qual são 2 são para 1 distancia e 4 angulos
     matrix_coocurrence = greycomatrix(
-        image, [1], [0, np.pi/4, np.pi/2, 3*np.pi/4])
+        img32, [1], [0, np.pi/4, np.pi/2, 3*np.pi/4], levels=32)
 
+    matrix = np.zeros(shape=(32, 32, 1, 1), dtype=int)
+    for i in range(0, len(matrix_coocurrence), 1):
+        for j in range(0, len(matrix_coocurrence[i]), 1):
+            if(matrix_coocurrence[i][j].any() != 0):
+                for k in range(0, len(matrix_coocurrence[i][j][0])):
+                    # soma todos os angulos da distancia 1 na matrix[i][j]
+                    matrix[i][j] += matrix_coocurrence[i][j][0][k]
+    # printa matrix de coocorrencia
+    # for i in range(0,len(matrix),1):
+        # print(matrix[i,:,0,0])
+
+    '''
     # printando a matriz de coocorrencia
-    # for i in range(0, len(matrix_coocurrence), 1):
-    #     for j in range(0, len(matrix_coocurrence[i]), 1):
-    #         if(matrix_coocurrence[i][j].any() != 0):
-    #             print(matrix_coocurrence[i][j][0])
-
+    print(len(matrix_coocurrence))
+    print(len(matrix_coocurrence[0]))
+    for i in range(0, len(matrix_coocurrence), 1):
+        for j in range(0, len(matrix_coocurrence[i]), 1):
+            if(matrix_coocurrence[i][j].any() != 0):
+                print(matrix_coocurrence[i][j][0])
+    '''
     # GLCM propriedades
-    homogeneidade = greycoprops(matrix_coocurrence, 'homogeneity')[0, 0]
-    energia = greycoprops(matrix_coocurrence, 'energy')[0, 0]
+    homogeneidade = greycoprops(matrix, 'homogeneity')[0, 0]
+    energia = greycoprops(matrix, 'energy')[0, 0]
     entropia = shannon_entropy(image)
+    entropia_namao = 0
+    for i in range(0, len(matrix), 1):
+        for j in range(0, len(matrix[i]), 1):
+            if(matrix_coocurrence[i][j][0][0] != 0):
+                entropia_namao += matrix[i][j][0][0] * \
+                    np.log2((matrix[i][j][0][0]))
 
     # Pop-up para mostrar o resultado
     pop = Toplevel(root)
-    pop.title("Descritores de Haralick da imagem")
+    pop.title("Descritores de Haralick da imagem 32 tons de cinza")
     pop.geometry("400x100")
     pop.config(bg="#C0C0C0")
 
@@ -477,7 +532,7 @@ def uploadImage():
     global img
     global filename
     filename = os.path.abspath(tkf.askopenfilename(
-        initialdir=r'C:\\', title="Select your Image"))
+        initialdir=r'C:\Users\Fasi\Desktop\PI Trabalho', title="Select your Image"))
     img = ImageTk.PhotoImage(Image.open(os.path.join(filename)))
     canvas.delete("all")
     canvas.create_image(120, 120, anchor=NW, image=img)
