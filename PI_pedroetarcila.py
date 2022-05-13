@@ -3,14 +3,10 @@
 # -Pedro Henrique Reis Rodrigues     -> Matrícula: 668443
 # -Tárcila Fernanda Resende da Silva -> Matrícula: 680250
 
-from ast import Global
 import math
-from operator import truediv
 import os
-from struct import pack
+from time import time
 import tkinter
-from cv2 import imread, log
-from pandas import DataFrame
 import tkinter.filedialog as tkf
 from tkinter import *
 from PIL import ImageTk, Image
@@ -30,10 +26,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import os
 import seaborn as sns
-from skimage.filters import sobel
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
-from matplotlib import cm
 
 WIDTH, HEIGHT = 950, 500
 
@@ -185,7 +179,7 @@ def Training():
     global y_train
     global x_test
     global y_test
-
+    cont = 0
     # for directory_path in glob.glob("Treino/*"):
     for directory_path in glob.glob("Treino/*"):
         label = directory_path.split("\\")[-1]
@@ -213,20 +207,23 @@ def Training():
     # for directory_path in glob.glob("cell_images/test/*"):
     for directory_path in glob.glob("Testes/*"):
         fruit_label = directory_path.split("\\")[-1]
+        print(fruit_label)
+        cont = 0
         for img_path in glob.glob(os.path.join(directory_path, "*.png")):
+            print(img_path)
             img = cv2.imread(img_path, 0)
             img = cv2.resize(img, (SIZE, SIZE))
             tomMax = img.max()
+            cont += 1
             img32 = [[0 for x in range(128)] for y in range(128)]
             for i in range(0, 128, 1):
                 for j in range(0, 128, 1):
                     img32[i][j] = np.uint8(round((img[i][j]/tomMax) * 31))
             test_images.append(img32)
             test_labels.append(fruit_label)
-
+        print(cont)
     test_images = np.array(test_images)
     test_labels = np.array(test_labels)
-
     # Encode labels from text (folder names) to integers.
 
     le = preprocessing.LabelEncoder()
@@ -368,8 +365,9 @@ def TestSelectedImage():
     global img2
     global filename2
     global auximg
+
     filename2 = os.path.abspath(tkf.askopenfilename(
-        initialdir=r'C:\\', title="Select your Image"))
+        initialdir=os.getcwd(), title="Select your Image"))
     img2 = cv2.imread(filename2, 0)
     img2 = cv2.resize(img2, (128, 128))
     img32 = [[0 for x in range(128)] for y in range(128)]
@@ -630,7 +628,7 @@ def uploadImage():
     global img
     global filename
     filename = os.path.abspath(tkf.askopenfilename(
-        initialdir=r'C:\Users\Fasi\Desktop\PI Trabalho', title="Select your Image"))
+        initialdir=os.getcwd(), title="Select your Image"))
     img = ImageTk.PhotoImage(Image.open(os.path.join(filename)))
     canvas.delete("all")
     canvas.create_image(120, 120, anchor=NW, image=img)
