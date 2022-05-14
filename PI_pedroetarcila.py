@@ -43,24 +43,34 @@ GLCM4 = []
 GLCM8 = []
 GLCM16 = []
 
+
+
+def donothing():
+   filewin = Toplevel(root)
+   button = Button(filewin, text="Do nothing button")
+   button.pack()
+
 # Criação da Matriz de Pixels através do TkInter
 root = Tk()
 root.title("Reconhecimento de Padrões por textura")
-root.grid_rowconfigure(0, weight=1)
-root.grid_columnconfigure(0, weight=1)
+
+root.geometry("300x30+0+0")
+
+# root.grid_rowconfigure(0, weight=1)
+# root.grid_columnconfigure(0, weight=1)
 # root.geometry("1400x600+0+0")
 
-# Definição de grid
-canvasFrame = Frame(root)
-canvasFrame.pack(side=tkinter.LEFT, fill=tkinter.X, expand=TRUE)
+# # Definição de grid
+# canvasFrame = Frame(root)
+# canvasFrame.pack(side=tkinter.LEFT, fill=tkinter.X, expand=TRUE)
 
-buttonsFrame = Frame(root, border=4)
-buttonsFrame.pack(side=tkinter.RIGHT)
+# buttonsFrame = Frame(root, border=4)
+# buttonsFrame.pack(side=tkinter.RIGHT)
 
-# Cria a janela, com tamanho de 1500x800p para seleção da imagem
-canvas = Canvas(canvasFrame, width=WIDTH, height=HEIGHT,
-                border=2, bg="#C0C0C0", cursor="dot")
-canvas.pack(fill=tkinter.BOTH, expand=TRUE)
+# # Cria a janela, com tamanho de 1500x800p para seleção da imagem
+# canvas = Canvas(canvasFrame, width=WIDTH, height=HEIGHT,
+#                 border=2, bg="#C0C0C0", cursor="dot")
+# canvas.pack(fill=tkinter.BOTH, expand=TRUE)
 
 
 def FeatureExtractor(dataset):
@@ -72,8 +82,6 @@ def FeatureExtractor(dataset):
     global GLCM8
     global GLCM16
     for image in range(dataset.shape[0]):  # iterate through each file
-        # print(image)
-
         # Temporary data frame to capture information for each loop.
         df = pd.DataFrame()
         # Reset dataframe to blank after each loop.
@@ -307,33 +315,42 @@ def Training():
 def RandomImageTesting():
     # Check results on a few random images
     # Select the index of image to be loaded for testing
-    global auximg2
+    # global auximg2
     n = random.randint(0, x_test.shape[0]-1)
     imgtest = x_test[n]
 
     #image = cv2.cvtColor(imgtest, cmap="gray")
-    image = ImageTk.PhotoImage(image=Image.fromarray(imgtest))
-    auximg2 = image
-    canvas.delete('all')
-    labelImgTitle = Label(root, text=f"Imagem utilizada no teste:",
-                          fg="black", font="Arial")
-    labelImgTitle.pack()
-    labelImgTitle.place(x=50, y=35)
-    canvas.create_image(50, 60, anchor=NW, image=auximg2)
+    selectedImageArray = np.array(cv2.resize(imgtest, (400, 400)))
+    selectedImage = ImageTk.PhotoImage(image=Image.fromarray(selectedImageArray))
+
+    # Imagem selecionada
+    pop = Toplevel(root)
+    pop.title("Imagem Aleatória Selecionada")
+    pop.geometry("450x450")
+    pop.config(bg="#C0C0C0")
+    canvas = Canvas(pop, width=450, height=450)
+    canvas.create_image(25, 25, anchor=NW, image=selectedImage)
+    canvas.pack()
+
 
     figure = Figure(figsize=(4, 4))
     ax = figure.add_subplot()
     ax.imshow(imgtest, cmap='gray')
 
-    # Pop-up para mostrar a imagem processada
-    pop = Toplevel(root)
-    pop.title("Imagem Analisada e Processada")
-    pop.geometry("500x500")
-    pop.config(bg="#C0C0C0")
+    # Pop-up para mostrar o resultado
+    resultPop = Toplevel(root)
+    resultPop.title("Imagem Analisada e Processada")
+    resultPop.geometry("500x520")
+    resultPop.config(bg="#C0C0C0")
 
-    canvas2 = FigureCanvasTkAgg(figure, master=pop)
+    titleLabel = Label(resultPop, text=f"Imagem reamostrada para 32 tons de cinza",
+                   fg="black", font="Arial")
+    titleLabel.pack()
+    titleLabel.place(x=50, y=5)
+
+    canvas2 = FigureCanvasTkAgg(figure, master=resultPop)
     canvas2.draw()
-    canvas2.get_tk_widget().pack(pady=10)
+    canvas2.get_tk_widget().pack(pady=30)
 
     # Extract features and reshape to right dimensions
     # Expand dims so the input is (num images, x, y, c)
@@ -346,16 +363,16 @@ def RandomImageTesting():
     img_prediction = np.argmax(img_prediction, axis=1)
     # Reverse the label encoder to original name
     img_prediction = le.inverse_transform([img_prediction])
-    label2 = Label(root, text=f"A Rede Neural achou que a imagem era:{img_prediction}\nE na verdade a imagem é: {test_labels[n]}",
+
+    label2 = Label(resultPop, text=f"A Rede Neural achou que a imagem era: {img_prediction}\nE na verdade a imagem é: {test_labels[n]}",
                    fg="black", font="Arial")
-    label2.pack()
-    label2.place(x=50, y=250)
+
+    label2.place(x=50, y=435)
 
     aux = metrics.accuracy_score(test_labels, test_prediction)
-    label4 = Label(root, text=f"Accuracy = {aux}",
+    label4 = Label(resultPop, text=f"Accuracy = {aux}",
                    fg="black", font="Arial")
-    label4.pack()
-    label4.place(x=50, y=300)
+    label4.place(x=50, y=475)
 
 
 def TestSelectedImage():
@@ -370,40 +387,38 @@ def TestSelectedImage():
         initialdir=os.getcwd(), title="Select your Image"))
     img2 = cv2.imread(filename2, 0)
     img2 = cv2.resize(img2, (128, 128))
+
+    selectedImageArray = np.array(cv2.resize(img2, (400, 400)))
+    selectedImage = ImageTk.PhotoImage(image=Image.fromarray(selectedImageArray))
+    
+    pop = Toplevel(root)
+    pop.title("Imagem Selecionada")
+    pop.geometry("450x450")
+    pop.config(bg="#C0C0C0")
+    canvas = Canvas(pop, width=450, height=450)
+    canvas.create_image(25, 25, anchor=NW, image=selectedImage)
+    canvas.pack()
+
+
     img32 = [[0 for x in range(128)] for y in range(128)]
     for i in range(0, 128, 1):
         for j in range(0, 128, 1):
             img32[i][j] = np.uint8(round((img2[i][j]/255) * 31))
 
-    canvas.delete('all')
     img32 = np.array(img32)
     #image = cv2.cvtColor(img32, cv2.COLOR_BGR2RGB)
-    image = ImageTk.PhotoImage(image=Image.fromarray(img32))
-    auximg2 = image
-    labelImgTitle = Label(root, text=f"Imagem utilizada no teste:",
-                          fg="black", font="Arial")
-    labelImgTitle.pack()
-    labelImgTitle.place(x=50, y=35)
-    canvas.create_image(50, 60, anchor=NW, image=auximg2)
-    '''
-    canvas.delete('all')
-    labelImgTitle = Label(root, text=f"Imagem utilizada no teste:",
-                          fg="black", font="Arial")
-    labelImgTitle.pack()
-    labelImgTitle.place(x=50, y=35)
+    # image = ImageTk.PhotoImage(image=Image.fromarray(img32))
     
-    canvas.create_image(50, 60, anchor=NW, image=auximg)
-    '''
 
-    if(r"Testes\1" in filename2):
+    if(r"Testes/1" in filename2):
         n = 1
-    elif(r"Testes\2" in filename2):
+    elif(r"Testes/2" in filename2):
         n = 2
 
-    elif(r"Testes\3" in filename2):
+    elif(r"Testes/3" in filename2):
         n = 3
 
-    elif(r"Testes\4" in filename2):
+    elif(r"Testes/4" in filename2):
         n = 4
 
     imgtest = img32
@@ -412,14 +427,19 @@ def TestSelectedImage():
     ax.imshow(imgtest, cmap='gray')
 
     # Pop-up para mostrar o resultado
-    pop = Toplevel(root)
-    pop.title("Imagem Analisada e Processada")
-    pop.geometry("500x500")
-    pop.config(bg="#C0C0C0")
+    resultPop = Toplevel(root)
+    resultPop.title("Imagem Analisada e Processada")
+    resultPop.geometry("500x520")
+    resultPop.config(bg="#C0C0C0")
 
-    canvas2 = FigureCanvasTkAgg(figure, master=pop)
+    titleLabel = Label(resultPop, text=f"Imagem reamostrada para 32 tons de cinza",
+                   fg="black", font="Arial")
+    titleLabel.pack()
+    titleLabel.place(x=50, y=5)
+
+    canvas2 = FigureCanvasTkAgg(figure, master=resultPop)
     canvas2.draw()
-    canvas2.get_tk_widget().pack(pady=10)
+    canvas2.get_tk_widget().pack(pady=30)
 
     # Extract features and reshape to right dimensions
     # Expand dims so the input is (num images, x, y, c)
@@ -432,21 +452,15 @@ def TestSelectedImage():
     img_prediction = np.argmax(img_prediction, axis=1)
     # Reverse the label encoder to original name
     img_prediction = le.inverse_transform([img_prediction])
-    label2 = Label(root, text=f"A Rede Neural achou que a imagem era:{img_prediction}\nE na verdade a imagem é: {n}",
-                   fg="black", font="Arial")
-    label2.pack()
-    label2.place(x=50, y=250)
 
-    # label3 = Label(root, text=f"Imagem Analisada e Processada:",
-    #                fg="black", font=("Arial", 20), )
-    # label3.pack()
-    # label3.place(x=500, y=50)
+    label2 = Label(resultPop, text=f"A Rede Neural achou que a imagem era: {img_prediction}\nE na verdade a imagem é: {n}",
+                   fg="black", font="Arial")
+    label2.place(x=50, y=435)
 
     aux = metrics.accuracy_score(test_labels, test_prediction)
-    label4 = Label(root, text=f"Accuracy = {aux}",
+    label4 = Label(resultPop, text=f"Accuracy = {aux}",
                    fg="black", font="Arial")
-    label4.pack()
-    label4.place(x=50, y=300)
+    label4.place(x=50, y=475)
 
 
 def printMatrixConfusion():
@@ -475,101 +489,6 @@ def printMatrixConfusion():
     label2.place(x=220, y=420)
 
 
-def reamostragem32():
-    img_reamostrada = io.imread(filename)
-    tomMax = img_reamostrada.max()
-    for i in range(0, len(img_reamostrada), 1):
-        for j in range(0, len(img_reamostrada[i]), 1):
-            img_reamostrada[i][j] = (img_reamostrada[i][j]/tomMax)*31
-    figure = Figure(figsize=(4, 4))
-    ax = figure.add_subplot()
-    ax.imshow(img_reamostrada, cmap="gray")
-    pop = Toplevel(root)
-    pop.title("Imagem Reamostrada com 32 tons de Cinza")
-    pop.geometry("500x500")
-    pop.config(bg="#C0C0C0")
-
-    canvas2 = FigureCanvasTkAgg(figure, master=pop)
-    canvas2.draw()
-    canvas2.get_tk_widget().pack(pady=10)
-
-
-def reamostragem16():
-    img_reamostrada = io.imread(filename)
-    tomMax = img_reamostrada.max()
-    for i in range(0, len(img_reamostrada), 1):
-        for j in range(0, len(img_reamostrada[i]), 1):
-            img_reamostrada[i][j] = (img_reamostrada[i][j]/tomMax)*15
-    figure = Figure(figsize=(4, 4))
-    ax = figure.add_subplot()
-    ax.imshow(img_reamostrada, cmap="gray")
-    pop = Toplevel(root)
-    pop.title("Imagem Reamostrada com 16 tons de Cinza")
-    pop.geometry("500x500")
-    pop.config(bg="#C0C0C0")
-
-    canvas2 = FigureCanvasTkAgg(figure, master=pop)
-    canvas2.draw()
-    canvas2.get_tk_widget().pack(pady=10)
-
-
-def reamostragem8():
-    img_reamostrada = io.imread(filename)
-    tomMax = img_reamostrada.max()
-    for i in range(0, len(img_reamostrada), 1):
-        for j in range(0, len(img_reamostrada[i]), 1):
-            img_reamostrada[i][j] = (img_reamostrada[i][j]/tomMax)*7
-    figure = Figure(figsize=(4, 4))
-    ax = figure.add_subplot()
-    ax.imshow(img_reamostrada, cmap="gray")
-    pop = Toplevel(root)
-    pop.title("Imagem Reamostrada com 8 tons de Cinza")
-    pop.geometry("500x500")
-    pop.config(bg="#C0C0C0")
-
-    canvas2 = FigureCanvasTkAgg(figure, master=pop)
-    canvas2.draw()
-    canvas2.get_tk_widget().pack(pady=10)
-
-
-def reamostragem4():
-    img_reamostrada = io.imread(filename)
-    tomMax = img_reamostrada.max()
-    for i in range(0, len(img_reamostrada), 1):
-        for j in range(0, len(img_reamostrada[i]), 1):
-            img_reamostrada[i][j] = (img_reamostrada[i][j]/tomMax)*3
-    figure = Figure(figsize=(4, 4))
-    ax = figure.add_subplot()
-    ax.imshow(img_reamostrada, cmap="gray")
-    pop = Toplevel(root)
-    pop.title("Imagem Reamostrada com 4 tons de Cinza")
-    pop.geometry("500x500")
-    pop.config(bg="#C0C0C0")
-
-    canvas2 = FigureCanvasTkAgg(figure, master=pop)
-    canvas2.draw()
-    canvas2.get_tk_widget().pack(pady=10)
-
-
-def reamostragem2():
-    img_reamostrada = io.imread(filename)
-    tomMax = img_reamostrada.max()
-    for i in range(0, len(img_reamostrada), 1):
-        for j in range(0, len(img_reamostrada[i]), 1):
-            img_reamostrada[i][j] = (img_reamostrada[i][j]/tomMax)*1
-    figure = Figure(figsize=(4, 4))
-    ax = figure.add_subplot()
-    ax.imshow(img_reamostrada, cmap="gray")
-    pop = Toplevel(root)
-    pop.title("Imagem Reamostrada com 2 tons de Cinza")
-    pop.geometry("500x500")
-    pop.config(bg="#C0C0C0")
-
-    canvas2 = FigureCanvasTkAgg(figure, master=pop)
-    canvas2.draw()
-    canvas2.get_tk_widget().pack(pady=10)
-
-
 def dataInfo():
     global label
     image = io.imread(filename)
@@ -589,19 +508,7 @@ def dataInfo():
                 for k in range(0, len(matrix_coocurrence[i][j][0])):
                     # soma todos os angulos da distancia 1 na matrix[i][j]
                     matrix[i][j] += matrix_coocurrence[i][j][0][k]
-    # printa matrix de coocorrencia
-    # for i in range(0,len(matrix),1):
-        # print(matrix[i,:,0,0])
 
-    '''
-    # printando a matriz de coocorrencia
-    print(len(matrix_coocurrence))
-    print(len(matrix_coocurrence[0]))
-    for i in range(0, len(matrix_coocurrence), 1):
-        for j in range(0, len(matrix_coocurrence[i]), 1):
-            if(matrix_coocurrence[i][j].any() != 0):
-                print(matrix_coocurrence[i][j][0])
-    '''
     # GLCM propriedades
     homogeneidade = greycoprops(matrix, 'homogeneity')[0, 0]
     energia = greycoprops(matrix, 'energy')[0, 0]
@@ -616,7 +523,7 @@ def dataInfo():
     # Pop-up para mostrar o resultado
     pop = Toplevel(root)
     pop.title("Descritores de Haralick da imagem 32 tons de cinza")
-    pop.geometry("400x100")
+    pop.geometry("500x100")
     pop.config(bg="#C0C0C0")
 
     pop_label = Label(pop, text=f"Entropia: {entropia}\nEnergia: {energia}\nHomogeneidade: {homogeneidade}",
@@ -624,61 +531,115 @@ def dataInfo():
     pop_label.pack(pady=10)
 
 
+def resampling(newMaxValue):
+    img_reamostrada = io.imread(filename)
+    tomMax = img_reamostrada.max()
+    for i in range(0, len(img_reamostrada), 1):
+        for j in range(0, len(img_reamostrada[i]), 1):
+            img_reamostrada[i][j] = (img_reamostrada[i][j]/tomMax)*(newMaxValue - 1)
+    figure = Figure(figsize=(4, 4))
+    ax = figure.add_subplot()
+    ax.imshow(img_reamostrada, cmap="gray")
+    pop = Toplevel(root)
+    pop.title(f"Imagem Reamostrada para {newMaxValue} tons de Cinza")
+    pop.geometry("500x500")
+    pop.config(bg="#C0C0C0")
+
+    canvas2 = FigureCanvasTkAgg(figure, master=pop)
+    canvas2.draw()
+    canvas2.get_tk_widget().pack(pady=10)
+
+
 def uploadImage():
     global img
     global filename
     filename = os.path.abspath(tkf.askopenfilename(
         initialdir=os.getcwd(), title="Select your Image"))
-    img = ImageTk.PhotoImage(Image.open(os.path.join(filename)))
-    canvas.delete("all")
-    canvas.create_image(120, 120, anchor=NW, image=img)
+    img = ImageTk.PhotoImage(Image.open(os.path.join(filename)).resize((300,300),Image.ANTIALIAS))
 
-# Definindo botões de ações -----------------------------------------------------------------------------------------------
-
-
-butUpload = Button(buttonsFrame, text="Selecionar uma imagem", bg="#696969",
-                   fg="WHITE", activebackground="#4F4F4F", width=40, command=uploadImage)
-butUpload.grid(row=1, column=1, padx=20, pady=20)
-
-butGetDATA = Button(buttonsFrame, text="Descrever imagem", bg="#696969",
-                    fg="WHITE", activebackground="#4F4F4F", width=40, command=dataInfo)
-butGetDATA.grid(row=2, column=1, padx=20, pady=20)
+    pop = Toplevel(root)
+    pop.title("Imagem Original")
+    pop.geometry("450x450")
+    pop.config(bg="#C0C0C0")
+    canvas = Canvas(pop, width=450, height= 450)
+    canvas.create_image(75, 75, anchor=NW, image=img)
+    canvas.pack()
 
 
-butTrain = Button(buttonsFrame, text="Treinar rede neural", bg="#696969",
-                  fg="WHITE", activebackground="#4F4F4F", width=40, command=Training)
-butTrain.grid(row=3, column=1, padx=20, pady=20)
 
-butTest = Button(buttonsFrame, text="Testar a rede neural com uma imagem aleatória",
-                 bg="#696969", fg="WHITE", activebackground="#4F4F4F", width=40, command=RandomImageTesting)
-butTest.grid(row=4, column=1, padx=20, pady=20)
+# # Definindo botões de ações -----------------------------------------------------------------------------------------------
 
-butTestImage = Button(buttonsFrame, text="Testar a rede neural com uma imagem selecionada",
-                      bg="#696969", fg="WHITE", activebackground="#4F4F4F", width=40, command=TestSelectedImage)
-butTestImage.grid(row=5, column=1, padx=20, pady=20)
 
-butConfusionMatrix = Button(buttonsFrame, text="Printar Matriz de Confusão", bg="#696969",
-                            fg="WHITE", activebackground="#4F4F4F", width=40, command=printMatrixConfusion)
-butConfusionMatrix.grid(row=6, column=1, padx=20, pady=10)
+# butUpload = Button(buttonsFrame, text="Selecionar uma imagem", bg="#696969",
+#                    fg="WHITE", activebackground="#4F4F4F", width=40, command=uploadImage)
+# butUpload.grid(row=1, column=1, padx=20, pady=20)
 
-but32Gray = Button(buttonsFrame, text="32 tons de cinza", bg="#696969",
-                   fg="WHITE", activebackground="#4F4F4F", width=15, command=reamostragem32)
-but32Gray.grid(row=1, column=2, padx=20, pady=10)
+# butGetDATA = Button(buttonsFrame, text="Descrever imagem", bg="#696969",
+#                     fg="WHITE", activebackground="#4F4F4F", width=40, command=dataInfo)
+# butGetDATA.grid(row=2, column=1, padx=20, pady=20)
 
-but16Gray = Button(buttonsFrame, text="16 tons de cinza", bg="#696969",
-                   fg="WHITE", activebackground="#4F4F4F", width=15, command=reamostragem16)
-but16Gray.grid(row=1, column=3, padx=20, pady=10)
 
-but8Gray = Button(buttonsFrame, text="8 tons de cinza", bg="#696969",
-                  fg="WHITE", activebackground="#4F4F4F", width=15, command=reamostragem8)
-but8Gray.grid(row=2, column=2, padx=20, pady=10)
+# butTrain = Button(buttonsFrame, text="Treinar rede neural", bg="#696969",
+#                   fg="WHITE", activebackground="#4F4F4F", width=40, command=Training)
+# butTrain.grid(row=3, column=1, padx=20, pady=20)
 
-but4Gray = Button(buttonsFrame, text="4 tons de cinza", bg="#696969",
-                  fg="WHITE", activebackground="#4F4F4F", width=15, command=reamostragem4)
-but4Gray.grid(row=2, column=3, padx=20, pady=10)
+# butTest = Button(buttonsFrame, text="Testar a rede neural com uma imagem aleatória",
+#                  bg="#696969", fg="WHITE", activebackground="#4F4F4F", width=40, command=RandomImageTesting)
+# butTest.grid(row=4, column=1, padx=20, pady=20)
 
-but2Gray = Button(buttonsFrame, text="2 tons de cinza", bg="#696969",
-                  fg="WHITE", activebackground="#4F4F4F", width=15, command=reamostragem2)
-but2Gray.grid(row=3, column=2, padx=20, pady=10)
+# butTestImage = Button(buttonsFrame, text="Testar a rede neural com uma imagem selecionada",
+#                       bg="#696969", fg="WHITE", activebackground="#4F4F4F", width=40, command=TestSelectedImage)
+# butTestImage.grid(row=5, column=1, padx=20, pady=20)
 
+# butConfusionMatrix = Button(buttonsFrame, text="Printar Matriz de Confusão", bg="#696969",
+#                             fg="WHITE", activebackground="#4F4F4F", width=40, command=printMatrixConfusion)
+# butConfusionMatrix.grid(row=6, column=1, padx=20, pady=10)
+
+# but32Gray = Button(buttonsFrame, text="32 tons de cinza", bg="#696969",
+#                    fg="WHITE", activebackground="#4F4F4F", width=15, command=reamostragem32)
+# but32Gray.grid(row=1, column=2, padx=20, pady=10)
+
+# but16Gray = Button(buttonsFrame, text="16 tons de cinza", bg="#696969",
+#                    fg="WHITE", activebackground="#4F4F4F", width=15, command=reamostragem16)
+# but16Gray.grid(row=1, column=3, padx=20, pady=10)
+
+# but8Gray = Button(buttonsFrame, text="8 tons de cinza", bg="#696969",
+#                   fg="WHITE", activebackground="#4F4F4F", width=15, command=reamostragem8)
+# but8Gray.grid(row=2, column=2, padx=20, pady=10)
+
+# but4Gray = Button(buttonsFrame, text="4 tons de cinza", bg="#696969",
+#                   fg="WHITE", activebackground="#4F4F4F", width=15, command=reamostragem4)
+# but4Gray.grid(row=2, column=3, padx=20, pady=10)
+
+# but2Gray = Button(buttonsFrame, text="2 tons de cinza", bg="#696969",
+#                   fg="WHITE", activebackground="#4F4F4F", width=15, command=reamostragem2)
+# but2Gray.grid(row=3, column=2, padx=20, pady=10)
+
+##### ------------------------  Barra de menu ---------------------------
+menubar = Menu(root)
+
+# Opcoes para aplicar descritores em imagem selecionada
+imageMenu = Menu(menubar, tearoff=0)
+menubar.add_cascade(label="Descrição", menu=imageMenu)
+imageMenu.add_command(label="Carregar imagem", command=uploadImage)
+imageMenu.add_command(label="Descrever", command=dataInfo)
+resamplingMenu = Menu(imageMenu, tearoff=0)
+resamplingMenu.add_command(label="32", command=lambda:resampling(32))
+resamplingMenu.add_command(label="16", command=lambda:resampling(16))
+resamplingMenu.add_command(label="8", command=lambda:resampling(8))
+resamplingMenu.add_command(label="4", command=lambda:resampling(4))
+resamplingMenu.add_command(label="2", command=lambda:resampling(2))
+imageMenu.add_cascade(label="Reamostrar imagem", menu=resamplingMenu)
+
+# Opcoes para o reconhecimento de imagens
+recognitionMenu = Menu(menubar, tearoff=0)
+menubar.add_cascade(label="Reconhecimento", menu=recognitionMenu)
+recognitionMenu.add_command(label="Treinar", command=Training)
+testMenu = Menu(recognitionMenu, tearoff=0) 
+recognitionMenu.add_cascade(label="Teste", menu=testMenu)
+testMenu.add_command(label="Com imagem aleatória", command=RandomImageTesting)
+testMenu.add_command(label="Com imagem selecionada", command=TestSelectedImage)
+recognitionMenu.add_command(label="Mostrar matriz de confusão", command=printMatrixConfusion)
+
+root.config(menu=menubar) 
 root.mainloop()
