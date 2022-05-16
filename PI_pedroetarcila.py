@@ -2,7 +2,7 @@
 # ALUNOS:
 # -Pedro Henrique Reis Rodrigues     -> Matrícula: 668443
 # -Tárcila Fernanda Resende da Silva -> Matrícula: 680250
-
+from sklearn import svm
 import math
 import os
 from time import time
@@ -44,36 +44,17 @@ GLCM8 = []
 GLCM16 = []
 
 
-
-def donothing():
-   filewin = Toplevel(root)
-   button = Button(filewin, text="Do nothing button")
-   button.pack()
-
 # Criação da Matriz de Pixels através do TkInter
 root = Tk()
 root.title("Reconhecimento de Padrões por textura")
 
 root.geometry("300x30+0+0")
 
-# root.grid_rowconfigure(0, weight=1)
-# root.grid_columnconfigure(0, weight=1)
-# root.geometry("1400x600+0+0")
-
-# # Definição de grid
-# canvasFrame = Frame(root)
-# canvasFrame.pack(side=tkinter.LEFT, fill=tkinter.X, expand=TRUE)
-
-# buttonsFrame = Frame(root, border=4)
-# buttonsFrame.pack(side=tkinter.RIGHT)
-
-# # Cria a janela, com tamanho de 1500x800p para seleção da imagem
-# canvas = Canvas(canvasFrame, width=WIDTH, height=HEIGHT,
-#                 border=2, bg="#C0C0C0", cursor="dot")
-# canvas.pack(fill=tkinter.BOTH, expand=TRUE)
-
 
 def FeatureExtractor(dataset):
+    # Função para a extração de dados de um vetor de imagens
+
+    # Gera uma tabela de dados para cada imagem
     image_dataset = pd.DataFrame()
     global GLCMaux
     global GLCM1
@@ -81,52 +62,55 @@ def FeatureExtractor(dataset):
     global GLCM4
     global GLCM8
     global GLCM16
-    for image in range(dataset.shape[0]):  # iterate through each file
-        # Temporary data frame to capture information for each loop.
+    # Percorre por todas as imagens desse vetor
+    for image in range(dataset.shape[0]):
+        # Criação temporária de um data frame para guardar as informações de cada iteração
         df = pd.DataFrame()
-        # Reset dataframe to blank after each loop.
-
+        # Pega imagem do vetor tri-dimensional de imagens
         img = dataset[image, :, :]
-    ################################################################
-    # START ADDING DATA TO THE DATAFRAME
+        ##################################################
+        # Geração de Matrizes Circulares C1, C2 ,C4 ,C8, C16
 
-        # Full image
-        #GLCM = greycomatrix(img, [1], [0, np.pi/4, np.pi/2, 3*np.pi/4])
+        # Declaração das matrizes de 4 dimensões, 32x32.
+
         GLCM1 = np.zeros(shape=(32, 32, 1, 1), dtype=int)
         GLCM2 = np.zeros(shape=(32, 32, 1, 1), dtype=int)
         GLCM4 = np.zeros(shape=(32, 32, 1, 1), dtype=int)
         GLCM8 = np.zeros(shape=(32, 32, 1, 1), dtype=int)
         GLCM16 = np.zeros(shape=(32, 32, 1, 1), dtype=int)
 
-        for i in range(0, 8, 1):
+        for i in range(0, 1, 1):
             GLCM = greycomatrix(img, [1], [i*math.radians(360/8)], levels=32)
             for j in range(0, len(GLCM), 1):
                 for k in range(0, len(GLCM[j]), 1):
                     GLCM1[j][k] += GLCM[j][k][0][0]
 
-        for i in range(0, 16, 1):
+        for i in range(0, 1, 1):
             GLCM = greycomatrix(img, [2], [i*math.radians(360/16)], levels=32)
             for j in range(0, len(GLCM), 1):
                 for k in range(0, len(GLCM[j]), 1):
                     GLCM2[j][k] += GLCM[j][k][0][0]
 
-        for i in range(0, 24, 1):
+        for i in range(0, 1, 1):
             GLCM = greycomatrix(img, [4], [i*math.radians(360/24)], levels=32)
             for j in range(0, len(GLCM), 1):
                 for k in range(0, len(GLCM[j]), 1):
                     GLCM4[j][k] += GLCM[j][k][0][0]
 
-        for i in range(0, 48, 1):
+        for i in range(0, 1, 1):
             GLCM = greycomatrix(img, [8], [i*math.radians(360/48)], levels=32)
             for j in range(0, len(GLCM), 1):
                 for k in range(0, len(GLCM[j]), 1):
                     GLCM8[j][k] += GLCM[j][k][0][0]
 
-        for i in range(0, 96, 1):
+        for i in range(0, 1, 1):
             GLCM = greycomatrix(img, [16], [i*math.radians(360/96)], levels=32)
             for j in range(0, len(GLCM), 1):
                 for k in range(0, len(GLCM[j]), 1):
                     GLCM16[j][k] += GLCM[j][k][0][0]
+
+        # Extraindo propriedades de Haralick das matrizes de co-coocorrencia
+        # Para a data frame df
 
         GLCM_Energy1 = greycoprops(GLCM1, 'energy')[0]
         df['Energy1'] = GLCM_Energy1
@@ -134,6 +118,12 @@ def FeatureExtractor(dataset):
         df['Homogen1'] = GLCM_hom1
         GLCM_entropy1 = shannon_entropy(GLCM1)
         df['Entropy1'] = GLCM_entropy1
+        GLCM_corr1 = greycoprops(GLCM1, 'correlation')[0]
+        df['Corr1'] = GLCM_corr1
+        GLCM_contr1 = greycoprops(GLCM1, 'contrast')[0]
+        df['Contrast1'] = GLCM_contr1
+        GLCM_diss1 = greycoprops(GLCM1, 'dissimilarity')[0]
+        df['Diss_sim1'] = GLCM_diss1
 
         GLCM_Energy2 = greycoprops(GLCM2, 'energy')[0]
         df['Energy2'] = GLCM_Energy2
@@ -141,6 +131,12 @@ def FeatureExtractor(dataset):
         df['Homogen2'] = GLCM_hom2
         GLCM_entropy2 = shannon_entropy(GLCM2)
         df['Entropy2'] = GLCM_entropy2
+        GLCM_corr2 = greycoprops(GLCM2, 'correlation')[0]
+        df['Corr2'] = GLCM_corr2
+        GLCM_contr2 = greycoprops(GLCM2, 'contrast')[0]
+        df['Contrast2'] = GLCM_contr2
+        GLCM_diss2 = greycoprops(GLCM1, 'dissimilarity')[0]
+        df['Diss_sim2'] = GLCM_diss2
 
         GLCM_Energy4 = greycoprops(GLCM4, 'energy')[0]
         df['Energy4'] = GLCM_Energy4
@@ -148,6 +144,12 @@ def FeatureExtractor(dataset):
         df['Homogen4'] = GLCM_hom4
         GLCM_entropy4 = shannon_entropy(GLCM4)
         df['Entropy4'] = GLCM_entropy4
+        GLCM_corr4 = greycoprops(GLCM4, 'correlation')[0]
+        df['Corr4'] = GLCM_corr4
+        GLCM_contr4 = greycoprops(GLCM4, 'contrast')[0]
+        df['Contrast4'] = GLCM_contr4
+        GLCM_diss4 = greycoprops(GLCM4, 'dissimilarity')[0]
+        df['Diss_sim4'] = GLCM_diss4
 
         GLCM_Energy8 = greycoprops(GLCM8, 'energy')[0]
         df['Energy8'] = GLCM_Energy8
@@ -155,6 +157,12 @@ def FeatureExtractor(dataset):
         df['Homogen8'] = GLCM_hom8
         GLCM_entropy8 = shannon_entropy(GLCM8)
         df['Entropy8'] = GLCM_entropy8
+        GLCM_corr8 = greycoprops(GLCM8, 'correlation')[0]
+        df['Corr8'] = GLCM_corr8
+        GLCM_contr8 = greycoprops(GLCM8, 'contrast')[0]
+        df['Contrast8'] = GLCM_contr8
+        GLCM_diss8 = greycoprops(GLCM8, 'dissimilarity')[0]
+        df['Diss_sim8'] = GLCM_diss8
 
         GLCM_Energy16 = greycoprops(GLCM16, 'energy')[0]
         df['Energy16'] = GLCM_Energy16
@@ -162,12 +170,14 @@ def FeatureExtractor(dataset):
         df['Homogen16'] = GLCM_hom16
         GLCM_entropy16 = shannon_entropy(GLCM16)
         df['Entropy16'] = GLCM_entropy16
+        GLCM_corr16 = greycoprops(GLCM16, 'correlation')[0]
+        df['Corr16'] = GLCM_corr16
+        GLCM_contr16 = greycoprops(GLCM16, 'contrast')[0]
+        df['Contrast16'] = GLCM_contr16
+        GLCM_diss16 = greycoprops(GLCM16, 'dissimilarity')[0]
+        df['Diss_sim16'] = GLCM_diss16
 
-        # Add more filters as needed
-        #entropy = shannon_entropy(img)
-        #df['Entropy'] = entropy
-
-        # Append features from current image to the dataset
+        # Insere na main dataset a auxiliar df da imagem "image"
         image_dataset = image_dataset.append(df)
 
     return image_dataset
@@ -175,10 +185,8 @@ def FeatureExtractor(dataset):
 
 def Training():
     SIZE = 128
-    global imgtest
     global test_prediction
-    global lgb_model
-    global le
+    global SVM_model
     global test_images
     global test_labels
     global train_images
@@ -188,20 +196,22 @@ def Training():
     global x_test
     global y_test
     cont = 0
-    # for directory_path in glob.glob("Treino/*"):
+
     for directory_path in glob.glob("Treino/*"):
         label = directory_path.split("\\")[-1]
-        print(label)
+        # print(label)
+        # print(directory_path)
         for img_path in glob.glob(os.path.join(directory_path, "*.png")):
-            print(img_path)
+            # print(img_path)
             # Lendo a imagem na escala de tons de cinza
-
             img = cv2.imread(img_path, 0)
-            img = cv2.resize(img, (SIZE, SIZE))  # Resize images
-            tomMax = img.max()
+            # Resize images por 128x128 (para via das dúvidas)
+            img = cv2.resize(img, (SIZE, SIZE))
+            tomMax = img.max()  # Pega o tom maximo da imagem para fazer a reamostragem em 32bits
             img32 = [[0 for x in range(128)] for y in range(128)]
             for i in range(0, 128, 1):
                 for j in range(0, 128, 1):
+                    # reamostragem em 32 bits pixel a pixel
                     img32[i][j] = np.uint8(round((img[i][j]/tomMax) * 31))
             train_images.append(img32)
             train_labels.append(label)
@@ -209,97 +219,59 @@ def Training():
     train_images = np.array(train_images)
     train_labels = np.array(train_labels)
 
-    # Do exactly the same for test/validation images
-    # test
+    # Fazendo exatamente a mesma coisa para as imagens Teste
 
-    # for directory_path in glob.glob("cell_images/test/*"):
     for directory_path in glob.glob("Testes/*"):
         fruit_label = directory_path.split("\\")[-1]
-        print(fruit_label)
+        # print(fruit_label)
         cont = 0
         for img_path in glob.glob(os.path.join(directory_path, "*.png")):
-            print(img_path)
+            # print(img_path)
+            # Lendo a imagem na escala de tons de cinza
             img = cv2.imread(img_path, 0)
+            # Resize images por 128x128 (para via das dúvidas)
             img = cv2.resize(img, (SIZE, SIZE))
-            tomMax = img.max()
+            tomMax = img.max()  # Pega o tom maximo da imagem para fazer a reamostragem em 32bits
             cont += 1
             img32 = [[0 for x in range(128)] for y in range(128)]
             for i in range(0, 128, 1):
                 for j in range(0, 128, 1):
+                    # reamostragem em 32 bits pixel a pixel
                     img32[i][j] = np.uint8(round((img[i][j]/tomMax) * 31))
             test_images.append(img32)
             test_labels.append(fruit_label)
-        print(cont)
+        # print(cont)
+    # armazena a imagem e o label correspondente
     test_images = np.array(test_images)
     test_labels = np.array(test_labels)
-    # Encode labels from text (folder names) to integers.
 
-    le = preprocessing.LabelEncoder()
-    le.fit(test_labels)
-    test_labels_encoded = le.transform(test_labels)
-    le.fit(train_labels)
-    train_labels_encoded = le.transform(train_labels)
+    # Redefinição de variaveis a fim de melhor entendimento do código
 
-    # Split data into test and train datasets (already split but assigning to meaningful convention)
-    # If you only have one dataset then split here
     x_train = train_images
-    y_train = train_labels_encoded
+    y_train = train_labels
     x_test = test_images
-    y_test = test_labels_encoded
-
-    # Normalize pixel values to between 0 and 1
-    #x_train, x_test = x_train / 255.0, x_test / 255.0
-
-    ###################################################################
-    # FEATURE EXTRACTOR function
-    # input shape is (n, x, y, c) - number of images, x, y, and channels
+    y_test = test_labels
 
     ####################################################################
-    # Extract features from training images
+    # Extrair as informações de haralick (atraves das matrizes de co-ocorrencia circulares)
+
     image_features = FeatureExtractor(x_train)
     X_for_ML = image_features
-    # Reshape to a vector for Random Forest / SVM training
-    #n_features = image_features.shape[1]
-    #image_features = np.expand_dims(image_features, axis=0)
-    # X_for_ML = np.reshape(image_features, (x_train.shape[0], -1))  #Reshape to #images, features
 
-    # Define the classifier
-    # from sklearn.ensemble import RandomForestClassifier
-    # RF_model = RandomForestClassifier(n_estimators = 50, random_state = 42)
+    # Definindo o classificador SVM
 
-    # Can also use SVM but RF is faster and may be more accurate.
-    #from sklearn import svm
-    # SVM_model = svm.SVC(decision_function_shape='ovo')  #For multiclass classification
-    #SVM_model.fit(X_for_ML, y_train)
+    SVM_model = svm.SVC()
 
-    # Fit the model on training data
-    # RF_model.fit(X_for_ML, y_train) #For sklearn no one hot encoding
+    # Modelando a estrutura de TREINO de dados para a SVM (Imagens,Labels)
 
-    # Class names for LGBM start at 0 so reassigning labels from 1,2,3,4 to 0,1,2,3
-    d_train = lgb.Dataset(X_for_ML, label=y_train)
+    SVM_model.fit(X_for_ML, y_train)
 
-    # https://lightgbm.readthedocs.io/en/latest/Parameters.html
-    lgbm_params = {'learning_rate': 0.05, 'boosting_type': 'dart',
-                   'objective': 'multiclass',
-                   'metric': 'multi_logloss',
-                   'num_leaves': 100,
-                   'max_depth': 10,
-                   'num_class': 4}  # no.of unique values in the target class not inclusive of the end value
-
-    # 50 iterations. Increase iterations for small learning rates
-    lgb_model = lgb.train(lgbm_params, d_train, 100)
-
-    # Predict on Test data
-    # Extract features from test data and reshape, just like training data
+    # Hora de testar nossa SVM
+    # Extraindo as informações de haralick (atraves das matrizes de co-ocorrencia circulares) para as imagens TESTE agora
     test_features = FeatureExtractor(x_test)
-    test_features = np.expand_dims(test_features, axis=0)
-    test_for_RF = np.reshape(test_features, (x_test.shape[0], -1))
 
-    # Predict on test
-    test_prediction = lgb_model.predict(test_for_RF)
-    test_prediction = np.argmax(test_prediction, axis=1)
-    # Inverse le transform to get original label back.
-    test_prediction = le.inverse_transform(test_prediction)
+    # Guarda os Predict -"Palpite"- da SVM na variavel
+    test_prediction = SVM_model.predict(test_features)
 
     # Pop-up para mostrar  que o treino finalizou
     popSuccess = Toplevel(root)
@@ -313,15 +285,16 @@ def Training():
 
 
 def RandomImageTesting():
-    # Check results on a few random images
-    # Select the index of image to be loaded for testing
-    # global auximg2
+    # Função para checar e testar o palpite da SVM, utilizando aleatoriedade
+
+    # Método simples para pegar qlqer numero dentro do intervalo do vetor de imagens testes
     n = random.randint(0, x_test.shape[0]-1)
     imgtest = x_test[n]
 
-    #image = cv2.cvtColor(imgtest, cmap="gray")
+    # Descrevendo o vetor para virar imagem e ser exibido no canvas
     selectedImageArray = np.array(cv2.resize(imgtest, (400, 400)))
-    selectedImage = ImageTk.PhotoImage(image=Image.fromarray(selectedImageArray))
+    selectedImage = ImageTk.PhotoImage(
+        image=Image.fromarray(selectedImageArray))
 
     # Imagem selecionada
     pop = Toplevel(root)
@@ -332,7 +305,7 @@ def RandomImageTesting():
     canvas.create_image(25, 25, anchor=NW, image=selectedImage)
     canvas.pack()
 
-
+    # Gera uma figura do estilo gráfico para mostrar os tons de cinza
     figure = Figure(figsize=(4, 4))
     ax = figure.add_subplot()
     ax.imshow(imgtest, cmap='gray')
@@ -344,7 +317,7 @@ def RandomImageTesting():
     resultPop.config(bg="#C0C0C0")
 
     titleLabel = Label(resultPop, text=f"Imagem reamostrada para 32 tons de cinza",
-                   fg="black", font="Arial")
+                       fg="black", font="Arial")
     titleLabel.pack()
     titleLabel.place(x=50, y=5)
 
@@ -352,45 +325,54 @@ def RandomImageTesting():
     canvas2.draw()
     canvas2.get_tk_widget().pack(pady=30)
 
-    # Extract features and reshape to right dimensions
-    # Expand dims so the input is (num images, x, y, c)
-    input_img = np.expand_dims(imgtest, axis=0)
-    input_img_features = FeatureExtractor(input_img)
-    input_img_features = np.expand_dims(input_img_features, axis=0)
-    input_img_for_RF = np.reshape(input_img_features, (input_img.shape[0], -1))
-    # Predict
-    img_prediction = lgb_model.predict(input_img_for_RF)
-    img_prediction = np.argmax(img_prediction, axis=1)
-    # Reverse the label encoder to original name
-    img_prediction = le.inverse_transform([img_prediction])
+    # Agora sim, depois de amostrar a imagem para o usuário, vamos fazer o palpite da SVM
 
-    label2 = Label(resultPop, text=f"A Rede Neural achou que a imagem era: {img_prediction}\nE na verdade a imagem é: {test_labels[n]}",
+    # Expande em 1 dimensão X para o input de imagens
+    input_img = np.expand_dims(imgtest, axis=0)
+
+    # Extrai os dados da imagem
+    input_img_features = FeatureExtractor(input_img)
+
+    # Predict da SVM
+
+    img_prediction = SVM_model.predict(input_img_features)
+
+    # Interface para mostrar o resultado
+
+    label2 = Label(resultPop, text=f"A Rede Neural achou que a imagem era: BRADS{img_prediction[0]}\nE na verdade a imagem é: BRADS{test_labels[n]}",
                    fg="black", font="Arial")
 
     label2.place(x=50, y=435)
-
-    aux = metrics.accuracy_score(test_labels, test_prediction)
-    label4 = Label(resultPop, text=f"Accuracy = {aux}",
+    # Cálculo da Acurácia / Especificidade
+    accuracy = metrics.accuracy_score(test_labels, test_prediction)
+    label4 = Label(resultPop, text=f"Acurácia = {accuracy}",
                    fg="black", font="Arial")
     label4.place(x=50, y=475)
 
 
 def TestSelectedImage():
-    # Check results on a few random images
-    # Select the index of image to be loaded for testing
+    # Função para checar e testar o palpite da SVM, utilizando a seleção do usuario
+
     global n
     global img2
     global filename2
-    global auximg
+
+    # Metódo exatamente o mesmo para selecionar a imagem no uploadImage()
 
     filename2 = os.path.abspath(tkf.askopenfilename(
         initialdir=os.getcwd(), title="Select your Image"))
+
+    # Leitura da imagem em matriz (assim como foi feita na parte de Training())
+
     img2 = cv2.imread(filename2, 0)
-    img2 = cv2.resize(img2, (128, 128))
+    img2 = cv2.resize(img2, (128, 128))  # Resize por via das dúvidas
+
+    # Interface para printar a imagem selecionada num pop-up
 
     selectedImageArray = np.array(cv2.resize(img2, (400, 400)))
-    selectedImage = ImageTk.PhotoImage(image=Image.fromarray(selectedImageArray))
-    
+    selectedImage = ImageTk.PhotoImage(
+        image=Image.fromarray(selectedImageArray))
+
     pop = Toplevel(root)
     pop.title("Imagem Selecionada")
     pop.geometry("450x450")
@@ -399,6 +381,10 @@ def TestSelectedImage():
     canvas.create_image(25, 25, anchor=NW, image=selectedImage)
     canvas.pack()
 
+    # Mesmo procedimento do processo de treinamento
+
+    # Aqui é necessário fazer a reamostragem por 32 tons de cinza novamente, pois como
+    # Pegamos a imagem diretamente do diretório, ela ainda está como 255 tons de cinza
 
     img32 = [[0 for x in range(128)] for y in range(128)]
     for i in range(0, 128, 1):
@@ -406,20 +392,19 @@ def TestSelectedImage():
             img32[i][j] = np.uint8(round((img2[i][j]/255) * 31))
 
     img32 = np.array(img32)
-    #image = cv2.cvtColor(img32, cv2.COLOR_BGR2RGB)
-    # image = ImageTk.PhotoImage(image=Image.fromarray(img32))
-    
 
-    if(r"Testes/1" in filename2):
+    # Função básica para pegar qual a resposta do Teste através do nome do diretorio
+
+    if(r"Testes\1" in filename2):
         n = 1
-    elif(r"Testes/2" in filename2):
+    elif(r"Testes\2" in filename2):
         n = 2
-
-    elif(r"Testes/3" in filename2):
+    elif(r"Testes\3" in filename2):
         n = 3
-
-    elif(r"Testes/4" in filename2):
+    elif(r"Testes\4" in filename2):
         n = 4
+
+    # Gera uma figura do estilo gráfico para mostrar os tons de cinza
 
     imgtest = img32
     figure = Figure(figsize=(4, 4))
@@ -433,7 +418,7 @@ def TestSelectedImage():
     resultPop.config(bg="#C0C0C0")
 
     titleLabel = Label(resultPop, text=f"Imagem reamostrada para 32 tons de cinza",
-                   fg="black", font="Arial")
+                       fg="black", font="Arial")
     titleLabel.pack()
     titleLabel.place(x=50, y=5)
 
@@ -441,30 +426,31 @@ def TestSelectedImage():
     canvas2.draw()
     canvas2.get_tk_widget().pack(pady=30)
 
-    # Extract features and reshape to right dimensions
-    # Expand dims so the input is (num images, x, y, c)
-    input_img = np.expand_dims(imgtest, axis=0)
-    input_img_features = FeatureExtractor(input_img)
-    input_img_features = np.expand_dims(input_img_features, axis=0)
-    input_img_for_RF = np.reshape(input_img_features, (input_img.shape[0], -1))
-    # Predict
-    img_prediction = lgb_model.predict(input_img_for_RF)
-    img_prediction = np.argmax(img_prediction, axis=1)
-    # Reverse the label encoder to original name
-    img_prediction = le.inverse_transform([img_prediction])
+    # Agora sim, depois de amostrar a imagem para o usuário, vamos fazer o palpite da SVM
 
-    label2 = Label(resultPop, text=f"A Rede Neural achou que a imagem era: {img_prediction}\nE na verdade a imagem é: {n}",
+    # Expande em 1 dimensão X para o input de imagens
+    input_img = np.expand_dims(imgtest, axis=0)
+    # Extrai os dados da imagem
+    input_img_features = FeatureExtractor(input_img)
+    # Predict da SVM
+    img_prediction = SVM_model.predict(input_img_features)
+
+    # Interface gráfica para mostrar o resultado
+
+    label2 = Label(resultPop, text=f"A Rede Neural achou que a imagem era: BRADS{img_prediction[0]}\nE na verdade a imagem é: BRADS{n}",
                    fg="black", font="Arial")
     label2.place(x=50, y=435)
-
-    aux = metrics.accuracy_score(test_labels, test_prediction)
-    label4 = Label(resultPop, text=f"Accuracy = {aux}",
+    # Cálculo da Acurácia / Especificidade
+    accuracy = metrics.accuracy_score(test_labels, test_prediction)
+    label4 = Label(resultPop, text=f"Acurácia = {accuracy}",
                    fg="black", font="Arial")
     label4.place(x=50, y=475)
 
 
 def printMatrixConfusion():
     cm = confusion_matrix(test_labels, test_prediction)
+
+    # Criação de figura para plotar usando matplot, + uso de uma biblioteca para fazer o heatmap do grafico
 
     figure = Figure(figsize=(4, 4))
     ax = figure.subplots()
@@ -480,10 +466,16 @@ def printMatrixConfusion():
     canvas2 = FigureCanvasTkAgg(init_figure, master=pop)
     canvas2.draw()
     canvas2.get_tk_widget().pack(pady=10)
-    # canvas2.get_tk_widget().place(x=50, y=80)
 
-    aux = metrics.accuracy_score(test_labels, test_prediction)
-    label2 = Label(pop, text=f"Accuracy = {aux}",
+    # Cálculo de Acurácia, Sensitividade, Especificidade
+    cmaux = 0
+    accuracy = metrics.accuracy_score(test_labels, test_prediction)
+    # Soma as diagonais da matriz de confusao
+    for i in range(0, 4, 1):
+        cmaux += cm[i, i]
+    sensitivity = round(cm[0, 0]/(cmaux), 3)
+    specificity = round(cm[1, 1]/(cmaux), 3)
+    label2 = Label(pop, text=f"Acurácia = {accuracy}\nEspecificidade = {specificity}\nSensitividade = {sensitivity}",
                    fg="black", font="Arial")
     label2.pack()
     label2.place(x=220, y=420)
@@ -498,37 +490,79 @@ def dataInfo():
         for j in range(0, 128, 1):
             img32[i][j] = np.uint8(round((image[i][j]/tomMax) * 31))
     # Gerando matriz de co-ocorrencia de 4 dimensões, no qual são 2 são para 1 distancia e 4 angulos
-    matrix_coocurrence = greycomatrix(
-        img32, [1], [0, np.pi/4, np.pi/2, 3*np.pi/4], levels=32)
+    GLCM1 = np.zeros(shape=(32, 32, 1, 1), dtype=int)
+    GLCM2 = np.zeros(shape=(32, 32, 1, 1), dtype=int)
+    GLCM4 = np.zeros(shape=(32, 32, 1, 1), dtype=int)
+    GLCM8 = np.zeros(shape=(32, 32, 1, 1), dtype=int)
+    GLCM16 = np.zeros(shape=(32, 32, 1, 1), dtype=int)
 
-    matrix = np.zeros(shape=(32, 32, 1, 1), dtype=int)
-    for i in range(0, len(matrix_coocurrence), 1):
-        for j in range(0, len(matrix_coocurrence[i]), 1):
-            if(matrix_coocurrence[i][j].any() != 0):
-                for k in range(0, len(matrix_coocurrence[i][j][0])):
-                    # soma todos os angulos da distancia 1 na matrix[i][j]
-                    matrix[i][j] += matrix_coocurrence[i][j][0][k]
+    for i in range(0, 8, 1):
+        GLCM = greycomatrix(img32, [1], [i*math.radians(360/8)], levels=32)
+        for j in range(0, len(GLCM), 1):
+            for k in range(0, len(GLCM[j]), 1):
+                GLCM1[j][k] += GLCM[j][k][0][0]
+
+    for i in range(0, 16, 1):
+        GLCM = greycomatrix(img32, [2], [i*math.radians(360/16)], levels=32)
+        for j in range(0, len(GLCM), 1):
+            for k in range(0, len(GLCM[j]), 1):
+                GLCM2[j][k] += GLCM[j][k][0][0]
+
+    for i in range(0, 24, 1):
+        GLCM = greycomatrix(img32, [4], [i*math.radians(360/24)], levels=32)
+        for j in range(0, len(GLCM), 1):
+            for k in range(0, len(GLCM[j]), 1):
+                GLCM4[j][k] += GLCM[j][k][0][0]
+
+    for i in range(0, 48, 1):
+        GLCM = greycomatrix(img32, [8], [i*math.radians(360/48)], levels=32)
+        for j in range(0, len(GLCM), 1):
+            for k in range(0, len(GLCM[j]), 1):
+                GLCM8[j][k] += GLCM[j][k][0][0]
+
+    for i in range(0, 96, 1):
+        GLCM = greycomatrix(img32, [16], [i*math.radians(360/96)], levels=32)
+        for j in range(0, len(GLCM), 1):
+            for k in range(0, len(GLCM[j]), 1):
+                GLCM16[j][k] += GLCM[j][k][0][0]
+
+    GLCM_Energys = []
+    GLCM_homs = []
+    GLCM_entropys = []
 
     # GLCM propriedades
-    homogeneidade = greycoprops(matrix, 'homogeneity')[0, 0]
-    energia = greycoprops(matrix, 'energy')[0, 0]
-    entropia = shannon_entropy(matrix)
-    entropia_namao = 0
-    for i in range(0, len(matrix), 1):
-        for j in range(0, len(matrix[i]), 1):
-            if(matrix_coocurrence[i][j][0][0] != 0):
-                entropia_namao += matrix[i][j][0][0] * \
-                    np.log2((matrix[i][j][0][0]))
+    GLCM_Energys.append(greycoprops(GLCM1, 'energy')[0][0])
+    GLCM_homs.append(greycoprops(GLCM1, 'homogeneity')[0][0])
+    GLCM_entropys.append(shannon_entropy(GLCM1))
+
+    GLCM_Energys.append(greycoprops(GLCM2, 'energy')[0][0])
+    GLCM_homs.append(greycoprops(GLCM2, 'homogeneity')[0][0])
+    GLCM_entropys.append(shannon_entropy(GLCM2))
+
+    GLCM_Energys.append(greycoprops(GLCM4, 'energy')[0][0])
+    GLCM_homs.append(greycoprops(GLCM4, 'homogeneity')[0][0])
+    GLCM_entropys.append(shannon_entropy(GLCM4))
+
+    GLCM_Energys.append(greycoprops(GLCM8, 'energy')[0][0])
+    GLCM_homs.append(greycoprops(GLCM8, 'homogeneity')[0][0])
+    GLCM_entropys.append(shannon_entropy(GLCM8))
+
+    GLCM_Energys.append(greycoprops(GLCM16, 'energy')[0][0])
+    GLCM_homs.append(greycoprops(GLCM16, 'homogeneity')[0][0])
+    GLCM_entropys.append(shannon_entropy(GLCM16))
 
     # Pop-up para mostrar o resultado
     pop = Toplevel(root)
     pop.title("Descritores de Haralick da imagem 32 tons de cinza")
-    pop.geometry("500x100")
+    pop.geometry("500x600")
     pop.config(bg="#C0C0C0")
 
-    pop_label = Label(pop, text=f"Entropia: {entropia}\nEnergia: {energia}\nHomogeneidade: {homogeneidade}",
-                      fg="black", font="Arial")
-    pop_label.pack(pady=10)
+    for i in range(0, 5, 1):
+
+        pop_label = Label(pop, text=f"Entropia C{(2**i)}: {GLCM_entropys[i]}\nEnergia C{2**i}: {GLCM_Energys[i]}\nHomogeneidade C{2**i}: {GLCM_homs[i]}",
+                          fg="black", font="Arial")
+        pop_label.pack()
+        pop_label.place(x=100, y=50+(100 * (i)))
 
 
 def resampling(newMaxValue):
@@ -536,7 +570,8 @@ def resampling(newMaxValue):
     tomMax = img_reamostrada.max()
     for i in range(0, len(img_reamostrada), 1):
         for j in range(0, len(img_reamostrada[i]), 1):
-            img_reamostrada[i][j] = (img_reamostrada[i][j]/tomMax)*(newMaxValue - 1)
+            img_reamostrada[i][j] = (
+                img_reamostrada[i][j]/tomMax)*(newMaxValue - 1)
     figure = Figure(figsize=(4, 4))
     ax = figure.add_subplot()
     ax.imshow(img_reamostrada, cmap="gray")
@@ -555,67 +590,19 @@ def uploadImage():
     global filename
     filename = os.path.abspath(tkf.askopenfilename(
         initialdir=os.getcwd(), title="Select your Image"))
-    img = ImageTk.PhotoImage(Image.open(os.path.join(filename)).resize((300,300),Image.ANTIALIAS))
+    img = ImageTk.PhotoImage(Image.open(os.path.join(
+        filename)).resize((300, 300), Image.ANTIALIAS))
 
     pop = Toplevel(root)
     pop.title("Imagem Original")
     pop.geometry("450x450")
     pop.config(bg="#C0C0C0")
-    canvas = Canvas(pop, width=450, height= 450)
+    canvas = Canvas(pop, width=450, height=450)
     canvas.create_image(75, 75, anchor=NW, image=img)
     canvas.pack()
 
 
-
-# # Definindo botões de ações -----------------------------------------------------------------------------------------------
-
-
-# butUpload = Button(buttonsFrame, text="Selecionar uma imagem", bg="#696969",
-#                    fg="WHITE", activebackground="#4F4F4F", width=40, command=uploadImage)
-# butUpload.grid(row=1, column=1, padx=20, pady=20)
-
-# butGetDATA = Button(buttonsFrame, text="Descrever imagem", bg="#696969",
-#                     fg="WHITE", activebackground="#4F4F4F", width=40, command=dataInfo)
-# butGetDATA.grid(row=2, column=1, padx=20, pady=20)
-
-
-# butTrain = Button(buttonsFrame, text="Treinar rede neural", bg="#696969",
-#                   fg="WHITE", activebackground="#4F4F4F", width=40, command=Training)
-# butTrain.grid(row=3, column=1, padx=20, pady=20)
-
-# butTest = Button(buttonsFrame, text="Testar a rede neural com uma imagem aleatória",
-#                  bg="#696969", fg="WHITE", activebackground="#4F4F4F", width=40, command=RandomImageTesting)
-# butTest.grid(row=4, column=1, padx=20, pady=20)
-
-# butTestImage = Button(buttonsFrame, text="Testar a rede neural com uma imagem selecionada",
-#                       bg="#696969", fg="WHITE", activebackground="#4F4F4F", width=40, command=TestSelectedImage)
-# butTestImage.grid(row=5, column=1, padx=20, pady=20)
-
-# butConfusionMatrix = Button(buttonsFrame, text="Printar Matriz de Confusão", bg="#696969",
-#                             fg="WHITE", activebackground="#4F4F4F", width=40, command=printMatrixConfusion)
-# butConfusionMatrix.grid(row=6, column=1, padx=20, pady=10)
-
-# but32Gray = Button(buttonsFrame, text="32 tons de cinza", bg="#696969",
-#                    fg="WHITE", activebackground="#4F4F4F", width=15, command=reamostragem32)
-# but32Gray.grid(row=1, column=2, padx=20, pady=10)
-
-# but16Gray = Button(buttonsFrame, text="16 tons de cinza", bg="#696969",
-#                    fg="WHITE", activebackground="#4F4F4F", width=15, command=reamostragem16)
-# but16Gray.grid(row=1, column=3, padx=20, pady=10)
-
-# but8Gray = Button(buttonsFrame, text="8 tons de cinza", bg="#696969",
-#                   fg="WHITE", activebackground="#4F4F4F", width=15, command=reamostragem8)
-# but8Gray.grid(row=2, column=2, padx=20, pady=10)
-
-# but4Gray = Button(buttonsFrame, text="4 tons de cinza", bg="#696969",
-#                   fg="WHITE", activebackground="#4F4F4F", width=15, command=reamostragem4)
-# but4Gray.grid(row=2, column=3, padx=20, pady=10)
-
-# but2Gray = Button(buttonsFrame, text="2 tons de cinza", bg="#696969",
-#                   fg="WHITE", activebackground="#4F4F4F", width=15, command=reamostragem2)
-# but2Gray.grid(row=3, column=2, padx=20, pady=10)
-
-##### ------------------------  Barra de menu ---------------------------
+# ------------------------  Barra de menu ---------------------------
 menubar = Menu(root)
 
 # Opcoes para aplicar descritores em imagem selecionada
@@ -624,22 +611,23 @@ menubar.add_cascade(label="Descrição", menu=imageMenu)
 imageMenu.add_command(label="Carregar imagem", command=uploadImage)
 imageMenu.add_command(label="Descrever", command=dataInfo)
 resamplingMenu = Menu(imageMenu, tearoff=0)
-resamplingMenu.add_command(label="32", command=lambda:resampling(32))
-resamplingMenu.add_command(label="16", command=lambda:resampling(16))
-resamplingMenu.add_command(label="8", command=lambda:resampling(8))
-resamplingMenu.add_command(label="4", command=lambda:resampling(4))
-resamplingMenu.add_command(label="2", command=lambda:resampling(2))
+resamplingMenu.add_command(label="32", command=lambda: resampling(32))
+resamplingMenu.add_command(label="16", command=lambda: resampling(16))
+resamplingMenu.add_command(label="8", command=lambda: resampling(8))
+resamplingMenu.add_command(label="4", command=lambda: resampling(4))
+resamplingMenu.add_command(label="2", command=lambda: resampling(2))
 imageMenu.add_cascade(label="Reamostrar imagem", menu=resamplingMenu)
 
 # Opcoes para o reconhecimento de imagens
 recognitionMenu = Menu(menubar, tearoff=0)
 menubar.add_cascade(label="Reconhecimento", menu=recognitionMenu)
 recognitionMenu.add_command(label="Treinar", command=Training)
-testMenu = Menu(recognitionMenu, tearoff=0) 
+testMenu = Menu(recognitionMenu, tearoff=0)
 recognitionMenu.add_cascade(label="Teste", menu=testMenu)
 testMenu.add_command(label="Com imagem aleatória", command=RandomImageTesting)
 testMenu.add_command(label="Com imagem selecionada", command=TestSelectedImage)
-recognitionMenu.add_command(label="Mostrar matriz de confusão", command=printMatrixConfusion)
+recognitionMenu.add_command(
+    label="Mostrar matriz de confusão", command=printMatrixConfusion)
 
-root.config(menu=menubar) 
+root.config(menu=menubar)
 root.mainloop()
