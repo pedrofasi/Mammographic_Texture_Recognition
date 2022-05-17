@@ -28,6 +28,8 @@ import os
 import seaborn as sns
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
+import timeit
+
 
 WIDTH, HEIGHT = 950, 500
 
@@ -184,6 +186,7 @@ def FeatureExtractor(dataset):
 
 
 def Training():
+    start = timeit.default_timer()
     SIZE = 128
     global test_prediction
     global SVM_model
@@ -283,8 +286,16 @@ def Training():
                              fg="black", font="Arial")
     popSuccess_label.pack(pady=10)
 
+    stop = timeit.default_timer()
+    time = stop - start
+    time_label = Label(
+        popSuccess, text=f'Time: {round(time,3)}s', fg="black", font=("Arial", 12))
+    time_label.pack()
+    time_label.place(x=0, y=0)
+
 
 def RandomImageTesting():
+    start = timeit.default_timer()
     # Função para checar e testar o palpite da SVM, utilizando aleatoriedade
 
     # Método simples para pegar qlqer numero dentro do intervalo do vetor de imagens testes
@@ -349,8 +360,16 @@ def RandomImageTesting():
                    fg="black", font="Arial")
     label4.place(x=50, y=475)
 
+    stop = timeit.default_timer()
+    time = stop - start
+    time_label = Label(
+        resultPop, text=f'Time: {round(time,3)}s', fg="black", font=("Arial", 12))
+    time_label.pack()
+    time_label.place(x=0, y=0)
+
 
 def TestSelectedImage():
+    start = timeit.default_timer()
     # Função para checar e testar o palpite da SVM, utilizando a seleção do usuario
 
     global n
@@ -446,8 +465,18 @@ def TestSelectedImage():
                    fg="black", font="Arial")
     label4.place(x=50, y=475)
 
+    stop = timeit.default_timer()
+    time = stop - start
+    time_label = Label(
+        resultPop, text=f'Time: {round(time,3)}s', fg="black", font=("Arial", 12))
+    time_label.pack()
+    time_label.place(x=0, y=0)
+
 
 def printMatrixConfusion():
+    start = timeit.default_timer()
+
+    # Obtem matrix de confusão através da função pré definida do classificador SVM
     cm = confusion_matrix(test_labels, test_prediction)
 
     # Criação de figura para plotar usando matplot, + uso de uma biblioteca para fazer o heatmap do grafico
@@ -481,17 +510,34 @@ def printMatrixConfusion():
                    fg="black", font="Arial")
     label2.pack()
     label2.place(x=220, y=420)
+    stop = timeit.default_timer()
+    time = stop - start
+    time_label = Label(
+        pop, text=f'Time: {round(time,3)}s', fg="black", font=("Arial", 12))
+    time_label.pack()
+    time_label.place(x=0, y=0)
 
 
 def FFTInfo():
+    start = timeit.default_timer()
+
+    # Obtenção da imagem através do diretorio pré-definido anteriormente pelo usuario "filename"
+
     img_reamostrada = io.imread(filename)
+
+    # Reamostragem para 32 tons de cinza
     tomMax = img_reamostrada.max()
     for i in range(0, len(img_reamostrada), 1):
         for j in range(0, len(img_reamostrada[i]), 1):
             img_reamostrada[i][j] = (
                 img_reamostrada[i][j]/tomMax)*31
 
+    # Função geradora da FFT da biblioteca skiimage, passando a imagem reamostrada como parametro
+
     dark_image_grey_fourier = np.fft.fftshift(np.fft.fft2(img_reamostrada))
+
+    # Passando o resultado para uma figura para ser exibida
+
     figure = Figure(figsize=(4, 4))
     ax = figure.add_subplot()
     ax.imshow(np.log(abs(dark_image_grey_fourier)), cmap='gray')
@@ -507,8 +553,17 @@ def FFTInfo():
     canvas2.draw()
     canvas2.get_tk_widget().pack(pady=10)
 
+    stop = timeit.default_timer()
+    time = stop - start
+    time_label = Label(
+        pop, text=f'Time: {round(time,3)}s', fg="black", font=("Arial", 12))
+    time_label.pack()
+    time_label.place(x=0, y=0)
+
 
 def dataInfo():
+
+    start = timeit.default_timer()
     global label
     image = io.imread(filename)
     img32 = [[0 for x in range(128)] for y in range(128)]
@@ -602,12 +657,23 @@ def dataInfo():
     pop.geometry("250x800")
     pop.config(bg="#C0C0C0")
 
+    start = timeit.default_timer()
+
+    # Your statements here
+
     for i in range(0, 5, 1):
         pop_label = Label(pop, text=f"Entropia C{(2**i)}: {round(GLCM_entropys[i],3)}\nEnergia C{2**i}: {round(GLCM_Energys[i],3)}\nHomogeneidade C{2**i}: {round(GLCM_homs[i],3)}\
         \nCorrelação C{2**i}: {round(GLCM_correlations[i],3)}\nContraste C{2**i}: {round(GLCM_contrasts[i],3)}\nDissimilaridade C{2**i}: {round(GLCM_dissimilarity[i],3)}",
                           fg="black", font="Arial")
         pop_label.pack()
         pop_label.place(x=10, y=50+(150 * (i)))
+
+    stop = timeit.default_timer()
+    time = stop - start
+    time_label = Label(
+        pop, text=f'Time: {round(time,3)}s', fg="black", font=("Arial", 12))
+    time_label.pack()
+    time_label.place(x=0, y=0)
 
 
 def resampling(newMaxValue):
