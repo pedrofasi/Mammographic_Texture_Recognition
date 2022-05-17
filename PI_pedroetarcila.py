@@ -79,31 +79,31 @@ def FeatureExtractor(dataset):
         GLCM8 = np.zeros(shape=(32, 32, 1, 1), dtype=int)
         GLCM16 = np.zeros(shape=(32, 32, 1, 1), dtype=int)
 
-        for i in range(0, 1, 1):
+        for i in range(0, 8, 1):
             GLCM = greycomatrix(img, [1], [i*math.radians(360/8)], levels=32)
             for j in range(0, len(GLCM), 1):
                 for k in range(0, len(GLCM[j]), 1):
                     GLCM1[j][k] += GLCM[j][k][0][0]
 
-        for i in range(0, 1, 1):
+        for i in range(0, 16, 1):
             GLCM = greycomatrix(img, [2], [i*math.radians(360/16)], levels=32)
             for j in range(0, len(GLCM), 1):
                 for k in range(0, len(GLCM[j]), 1):
                     GLCM2[j][k] += GLCM[j][k][0][0]
 
-        for i in range(0, 1, 1):
+        for i in range(0, 24, 1):
             GLCM = greycomatrix(img, [4], [i*math.radians(360/24)], levels=32)
             for j in range(0, len(GLCM), 1):
                 for k in range(0, len(GLCM[j]), 1):
                     GLCM4[j][k] += GLCM[j][k][0][0]
 
-        for i in range(0, 1, 1):
+        for i in range(0, 48, 1):
             GLCM = greycomatrix(img, [8], [i*math.radians(360/48)], levels=32)
             for j in range(0, len(GLCM), 1):
                 for k in range(0, len(GLCM[j]), 1):
                     GLCM8[j][k] += GLCM[j][k][0][0]
 
-        for i in range(0, 1, 1):
+        for i in range(0, 96, 1):
             GLCM = greycomatrix(img, [16], [i*math.radians(360/96)], levels=32)
             for j in range(0, len(GLCM), 1):
                 for k in range(0, len(GLCM[j]), 1):
@@ -467,15 +467,17 @@ def printMatrixConfusion():
     canvas2.draw()
     canvas2.get_tk_widget().pack(pady=10)
 
-    # Cálculo de Acurácia, Sensitividade, Especificidade
+    # Cálculo da Acurácia
     cmaux = 0
     accuracy = metrics.accuracy_score(test_labels, test_prediction)
-    # Soma as diagonais da matriz de confusao
+    # Cálculo da Especificidade
     for i in range(0, 4, 1):
-        cmaux += cm[i, i]
-    sensitivity = round(cm[0, 0]/(cmaux), 3)
-    specificity = round(cm[1, 1]/(cmaux), 3)
-    label2 = Label(pop, text=f"Acurácia = {accuracy}\nEspecificidade = {specificity}\nSensitividade = {sensitivity}",
+        for j in range(0, 4, 1):
+            if(i != j):
+                cmaux += cm[j, i]
+
+    specificity = round(1-(cmaux/300),3)
+    label2 = Label(pop, text=f"Acurácia = {accuracy}\nEspecificidade = {specificity}",
                    fg="black", font="Arial")
     label2.pack()
     label2.place(x=220, y=420)
