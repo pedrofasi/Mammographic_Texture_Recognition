@@ -476,11 +476,36 @@ def printMatrixConfusion():
             if(i != j):
                 cmaux += cm[j, i]
 
-    specificity = round(1-(cmaux/300),3)
+    specificity = round(1-(cmaux/300), 3)
     label2 = Label(pop, text=f"Acurácia = {accuracy}\nEspecificidade = {specificity}",
                    fg="black", font="Arial")
     label2.pack()
     label2.place(x=220, y=420)
+
+
+def FFTInfo():
+    img_reamostrada = io.imread(filename)
+    tomMax = img_reamostrada.max()
+    for i in range(0, len(img_reamostrada), 1):
+        for j in range(0, len(img_reamostrada[i]), 1):
+            img_reamostrada[i][j] = (
+                img_reamostrada[i][j]/tomMax)*31
+
+    dark_image_grey_fourier = np.fft.fftshift(np.fft.fft2(img_reamostrada))
+    figure = Figure(figsize=(4, 4))
+    ax = figure.add_subplot()
+    ax.imshow(np.log(abs(dark_image_grey_fourier)), cmap='gray')
+
+    # Pop-up para mostrar o resultado
+    pop = Toplevel(root)
+    pop.title("Transformada de Fourier")
+    pop.geometry("500x500")
+    pop.config(bg="#C0C0C0")
+
+    init_figure = figure
+    canvas2 = FigureCanvasTkAgg(init_figure, master=pop)
+    canvas2.draw()
+    canvas2.get_tk_widget().pack(pady=10)
 
 
 def dataInfo():
@@ -531,40 +556,58 @@ def dataInfo():
     GLCM_Energys = []
     GLCM_homs = []
     GLCM_entropys = []
+    GLCM_correlations = []
+    GLCM_contrasts = []
+    GLCM_dissimilarity = []
 
     # GLCM propriedades
     GLCM_Energys.append(greycoprops(GLCM1, 'energy')[0][0])
     GLCM_homs.append(greycoprops(GLCM1, 'homogeneity')[0][0])
     GLCM_entropys.append(shannon_entropy(GLCM1))
+    GLCM_correlations.append(greycoprops(GLCM1, 'correlation')[0][0])
+    GLCM_contrasts.append(greycoprops(GLCM1, 'contrast')[0][0])
+    GLCM_dissimilarity.append(greycoprops(GLCM1, 'dissimilarity')[0][0])
 
     GLCM_Energys.append(greycoprops(GLCM2, 'energy')[0][0])
     GLCM_homs.append(greycoprops(GLCM2, 'homogeneity')[0][0])
     GLCM_entropys.append(shannon_entropy(GLCM2))
+    GLCM_correlations.append(greycoprops(GLCM2, 'correlation')[0][0])
+    GLCM_contrasts.append(greycoprops(GLCM2, 'contrast')[0][0])
+    GLCM_dissimilarity.append(greycoprops(GLCM2, 'dissimilarity')[0][0])
 
     GLCM_Energys.append(greycoprops(GLCM4, 'energy')[0][0])
     GLCM_homs.append(greycoprops(GLCM4, 'homogeneity')[0][0])
     GLCM_entropys.append(shannon_entropy(GLCM4))
+    GLCM_correlations.append(greycoprops(GLCM4, 'correlation')[0][0])
+    GLCM_contrasts.append(greycoprops(GLCM4, 'contrast')[0][0])
+    GLCM_dissimilarity.append(greycoprops(GLCM4, 'dissimilarity')[0][0])
 
     GLCM_Energys.append(greycoprops(GLCM8, 'energy')[0][0])
     GLCM_homs.append(greycoprops(GLCM8, 'homogeneity')[0][0])
     GLCM_entropys.append(shannon_entropy(GLCM8))
+    GLCM_correlations.append(greycoprops(GLCM8, 'correlation')[0][0])
+    GLCM_contrasts.append(greycoprops(GLCM8, 'contrast')[0][0])
+    GLCM_dissimilarity.append(greycoprops(GLCM8, 'dissimilarity')[0][0])
 
     GLCM_Energys.append(greycoprops(GLCM16, 'energy')[0][0])
     GLCM_homs.append(greycoprops(GLCM16, 'homogeneity')[0][0])
     GLCM_entropys.append(shannon_entropy(GLCM16))
+    GLCM_correlations.append(greycoprops(GLCM16, 'correlation')[0][0])
+    GLCM_contrasts.append(greycoprops(GLCM16, 'contrast')[0][0])
+    GLCM_dissimilarity.append(greycoprops(GLCM16, 'dissimilarity')[0][0])
 
     # Pop-up para mostrar o resultado
     pop = Toplevel(root)
     pop.title("Descritores de Haralick da imagem 32 tons de cinza")
-    pop.geometry("500x600")
+    pop.geometry("450x800")
     pop.config(bg="#C0C0C0")
 
     for i in range(0, 5, 1):
-
-        pop_label = Label(pop, text=f"Entropia C{(2**i)}: {GLCM_entropys[i]}\nEnergia C{2**i}: {GLCM_Energys[i]}\nHomogeneidade C{2**i}: {GLCM_homs[i]}",
+        pop_label = Label(pop, text=f"Entropia C{(2**i)}: {GLCM_entropys[i]}\nEnergia C{2**i}: {GLCM_Energys[i]}\nHomogeneidade C{2**i}: {GLCM_homs[i]}\
+        \nCorrelação C{2**i}: {GLCM_correlations[i]}\nContraste C{2**i}: {GLCM_contrasts[i]}\nDissimilaridade C{2**i}: {GLCM_dissimilarity[i]}",
                           fg="black", font="Arial")
         pop_label.pack()
-        pop_label.place(x=100, y=50+(100 * (i)))
+        pop_label.place(x=50, y=50+(150 * (i)))
 
 
 def resampling(newMaxValue):
@@ -607,17 +650,21 @@ def uploadImage():
 # ------------------------  Barra de menu ---------------------------
 menubar = Menu(root)
 
+# Opcoes para carregar a imagem
+uploadMenu = Menu(menubar, tearoff=0)
+menubar.add_cascade(label="Novo", menu=uploadMenu)
+uploadMenu.add_command(label="Carregar imagem", command=uploadImage)
 # Opcoes para aplicar descritores em imagem selecionada
 imageMenu = Menu(menubar, tearoff=0)
 menubar.add_cascade(label="Descrição", menu=imageMenu)
-imageMenu.add_command(label="Carregar imagem", command=uploadImage)
-imageMenu.add_command(label="Descrever", command=dataInfo)
+imageMenu.add_command(label="Obter Descritores Haralick", command=dataInfo)
+imageMenu.add_command(label="Gerar Transformada de Fourier", command=FFTInfo)
 resamplingMenu = Menu(imageMenu, tearoff=0)
-resamplingMenu.add_command(label="32", command=lambda: resampling(32))
-resamplingMenu.add_command(label="16", command=lambda: resampling(16))
-resamplingMenu.add_command(label="8", command=lambda: resampling(8))
-resamplingMenu.add_command(label="4", command=lambda: resampling(4))
-resamplingMenu.add_command(label="2", command=lambda: resampling(2))
+resamplingMenu.add_command(label="32-bits", command=lambda: resampling(32))
+resamplingMenu.add_command(label="16-bits", command=lambda: resampling(16))
+resamplingMenu.add_command(label="8-bits", command=lambda: resampling(8))
+resamplingMenu.add_command(label="4-bits", command=lambda: resampling(4))
+resamplingMenu.add_command(label="2-bits", command=lambda: resampling(2))
 imageMenu.add_cascade(label="Reamostrar imagem", menu=resamplingMenu)
 
 # Opcoes para o reconhecimento de imagens
