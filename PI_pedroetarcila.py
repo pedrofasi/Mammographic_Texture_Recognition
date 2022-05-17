@@ -599,24 +599,31 @@ def dataInfo():
     # Pop-up para mostrar o resultado
     pop = Toplevel(root)
     pop.title("Descritores de Haralick da imagem 32 tons de cinza")
-    pop.geometry("450x800")
+    pop.geometry("250x800")
     pop.config(bg="#C0C0C0")
 
     for i in range(0, 5, 1):
-        pop_label = Label(pop, text=f"Entropia C{(2**i)}: {GLCM_entropys[i]}\nEnergia C{2**i}: {GLCM_Energys[i]}\nHomogeneidade C{2**i}: {GLCM_homs[i]}\
-        \nCorrelação C{2**i}: {GLCM_correlations[i]}\nContraste C{2**i}: {GLCM_contrasts[i]}\nDissimilaridade C{2**i}: {GLCM_dissimilarity[i]}",
+        pop_label = Label(pop, text=f"Entropia C{(2**i)}: {round(GLCM_entropys[i],3)}\nEnergia C{2**i}: {round(GLCM_Energys[i],3)}\nHomogeneidade C{2**i}: {round(GLCM_homs[i],3)}\
+        \nCorrelação C{2**i}: {round(GLCM_correlations[i],3)}\nContraste C{2**i}: {round(GLCM_contrasts[i],3)}\nDissimilaridade C{2**i}: {round(GLCM_dissimilarity[i],3)}",
                           fg="black", font="Arial")
         pop_label.pack()
-        pop_label.place(x=50, y=50+(150 * (i)))
+        pop_label.place(x=10, y=50+(150 * (i)))
 
 
 def resampling(newMaxValue):
+
+    # Pega a imagem que possui como destino o nome do diretorio filename
+    # E aplica equalização definida previamente pelo usuario
+
     img_reamostrada = io.imread(filename)
-    tomMax = img_reamostrada.max()
+    tomMax = img_reamostrada.max()  # Pega tom Max da imagem
     for i in range(0, len(img_reamostrada), 1):
         for j in range(0, len(img_reamostrada[i]), 1):
             img_reamostrada[i][j] = (
-                img_reamostrada[i][j]/tomMax)*(newMaxValue - 1)
+                img_reamostrada[i][j]/tomMax)*(newMaxValue - 1)  # Reamostragem por cada pixel
+
+    # Visualização da Imagem Reamostrada
+
     figure = Figure(figsize=(4, 4))
     ax = figure.add_subplot()
     ax.imshow(img_reamostrada, cmap="gray")
@@ -633,10 +640,16 @@ def resampling(newMaxValue):
 def uploadImage():
     global img
     global filename
+
+    # Armazena o diretorio da imagem desejada em filename
+    # E redimensiona para 300x300 apenas para Visualização (não sera utilizada 300x300 nos calculos matrizes de co-ocorrencia)
+
     filename = os.path.abspath(tkf.askopenfilename(
         initialdir=os.getcwd(), title="Select your Image"))
     img = ImageTk.PhotoImage(Image.open(os.path.join(
         filename)).resize((300, 300), Image.ANTIALIAS))
+
+    # Visualização da Imagem
 
     pop = Toplevel(root)
     pop.title("Imagem Original")
