@@ -201,8 +201,8 @@ def Training():
     cont = 0
 
     for directory_path in glob.glob("Treino/*"):
-        label = directory_path.split("\\")[-1]
-        # print(label)
+        label = directory_path.split("/")[-1]
+        # print("label "+ label)
         # print(directory_path)
         for img_path in glob.glob(os.path.join(directory_path, "*.png")):
             # print(img_path)
@@ -225,8 +225,7 @@ def Training():
     # Fazendo exatamente a mesma coisa para as imagens Teste
 
     for directory_path in glob.glob("Testes/*"):
-        fruit_label = directory_path.split("\\")[-1]
-        # print(fruit_label)
+        fruit_label = directory_path.split("/")[-1]
         cont = 0
         for img_path in glob.glob(os.path.join(directory_path, "*.png")):
             # print(img_path)
