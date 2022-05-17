@@ -29,6 +29,11 @@ import seaborn as sns
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
 import timeit
+from sklearn import datasets
+from sklearn.model_selection import train_test_split
+from sklearn.model_selection import GridSearchCV
+from sklearn.metrics import classification_report
+from sklearn.svm import SVC
 
 
 WIDTH, HEIGHT = 950, 500
@@ -262,7 +267,7 @@ def Training():
 
     # Definindo o classificador SVM
 
-    SVM_model = svm.SVC()
+    SVM_model = svm.SVC(C=100, kernel='linear')
 
     # Modelando a estrutura de TREINO de dados para a SVM (Imagens,Labels)
 
@@ -270,10 +275,51 @@ def Training():
 
     # Hora de testar nossa SVM
     # Extraindo as informações de haralick (atraves das matrizes de co-ocorrencia circulares) para as imagens TESTE agora
+
     test_features = FeatureExtractor(x_test)
 
     # Guarda os Predict -"Palpite"- da SVM na variavel
+
     test_prediction = SVM_model.predict(test_features)
+
+    # # Set the parameters by cross-validation
+    # tuned_parameters = [
+    #     {"kernel": ["rbf"], "gamma": [1e-3, 1e-4], "C": [1, 10, 100, 1000]},
+    #     {"kernel": ["linear"], "C": [1, 10, 100, 1000]},
+    # ]
+
+    # scores = ["precision", "recall"]
+
+    # for score in scores:
+    #     print("# Tuning hyper-parameters for %s" % score)
+    #     print()
+
+    #     clf = GridSearchCV(SVC(), tuned_parameters, scoring="%s_macro" % score)
+    #     clf.fit(X_for_ML, y_train)
+
+    #     print("Best parameters set found on development set:")
+    #     print()
+    #     print(clf.best_params_)
+    #     print()
+    #     print("Grid scores on development set:")
+    #     print()
+    #     means = clf.cv_results_["mean_test_score"]
+    #     stds = clf.cv_results_["std_test_score"]
+    #     for mean, std, params in zip(means, stds, clf.cv_results_["params"]):
+    #         print("%0.3f (+/-%0.03f) for %r" % (mean, std * 2, params))
+    #     print()
+
+    #     print("Detailed classification report:")
+    #     print()
+    #     print("The model is trained on the full development set.")
+    #     print("The scores are computed on the full evaluation set.")
+    #     print()
+    #     y_true, y_pred = y_test, clf.predict(test_features)
+    #     print(classification_report(y_true, y_pred))
+    #     print()
+
+    # # Note the problem is too easy: the hyperparameter plateau is too flat and the
+    # # output model is the same for precision and recall with ties in quality.
 
     # Pop-up para mostrar  que o treino finalizou
     popSuccess = Toplevel(root)
