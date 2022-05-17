@@ -532,7 +532,7 @@ def FFTInfo():
             img_reamostrada[i][j] = (
                 img_reamostrada[i][j]/tomMax)*31
 
-    # Função geradora da FFT da biblioteca skiimage, passando a imagem reamostrada como parametro
+    # Função geradora da FFT da biblioteca scipy, passando a imagem reamostrada como parametro
 
     dark_image_grey_fourier = np.fft.fftshift(np.fft.fft2(img_reamostrada))
 
@@ -564,7 +564,7 @@ def FFTInfo():
 def dataInfo():
 
     start = timeit.default_timer()
-    global label
+
     image = io.imread(filename)
     img32 = [[0 for x in range(128)] for y in range(128)]
     tomMax = image.max()
