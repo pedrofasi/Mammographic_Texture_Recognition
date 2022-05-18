@@ -699,7 +699,7 @@ def dataInfo():
     # Pop-up para mostrar o resultado
     pop = Toplevel(root)
     pop.title("Descritores de Haralick da imagem 32 tons de cinza")
-    pop.geometry("250x800")
+    pop.geometry("550x450")
     pop.config(bg="#C0C0C0")
 
     start = timeit.default_timer()
@@ -711,7 +711,10 @@ def dataInfo():
         \nCorrelação C{2**i}: {round(GLCM_correlations[i],3)}\nContraste C{2**i}: {round(GLCM_contrasts[i],3)}\nDissimilaridade C{2**i}: {round(GLCM_dissimilarity[i],3)}",
                           fg="black", font="Arial")
         pop_label.pack()
-        pop_label.place(x=10, y=50+(150 * (i)))
+        if(i <= 2):
+            pop_label.place(x=10, y=40+(140 * (i)))
+        else: 
+            pop_label.place(x=280, y=40+(140 * (i - 3)))
 
     stop = timeit.default_timer()
     time = stop - start

@@ -1,5 +1,17 @@
 # Projeto de reconhecimento de Padrões por textura em imagens mamográficas
 
+## Images path
+
+You should put the Training images in the directories:    
+ ./Treino/1 
+ ./Treino/2 
+ ./Treino/3 
+  ./Treino/4 
+You should put the Test images in the directories
+ ./Testes/1 
+ ./Testes/2 
+ ./Testes/3 
+  ./Testes/4 
 ## RUN :arrow_forward: 
 
 Make sure you have python installed at your computer
